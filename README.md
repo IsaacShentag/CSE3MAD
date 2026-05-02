@@ -1,50 +1,263 @@
-# Welcome to your Expo app 👋
+# STEMM Lab Mobile Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Overview
 
-## Get started
+STEMM Lab is a React Native mobile application developed for the CSE3MAD Mobile Application Development assessment. The application transforms STEMM learning activities into interactive mobile experiences using mobile sensors, timers, experiment tracking, and data analysis.
 
-1. Install dependencies
+The current implementation focuses on the **Parachute Drop Challenge**, where students design and test parachutes while analysing the effects of gravity, drag force, acceleration, and landing safety.
 
-   ```bash
-   npm install
-   ```
+The application allows students to:
 
-2. Start the app
+- Record parachute experiment data
+- Compare multiple parachute designs
+- Calculate forces and motion values
+- Visualise performance improvements using charts
+- Track experiment results across trials
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+# Technologies Used
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Frontend
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- React Native
+- Expo
+- JavaScript
+- React Hooks
 
-## Get a fresh project
+## Libraries
 
-When you're ready, run:
+- react-native-chart-kit
+- react-native-svg
+
+## Development Tools
+
+- Node.js
+- npm
+- Expo Go
+- Visual Studio Code
+
+---
+
+# Features
+
+## Experiment Recording
+
+Users can record parachute experiment trials including:
+
+- Time
+- Height
+- Mass
+- Prototype type
+
+---
+
+## Physics Engine
+
+The application automatically calculates:
+
+- Acceleration
+- Velocity
+- Weight force
+- Net force
+- Drag force
+- G-force
+- Ideal freefall time
+
+---
+
+## Prototype Comparison
+
+Users can compare multiple parachute designs using separate tabs.
+
+Supported prototype categories:
+
+- Baseline
+- Prototype 1
+- Prototype 2
+- Prototype 3
+
+---
+
+## Graphing System
+
+The application visualises trial improvement using line graphs.
+
+This allows students to observe:
+
+- Performance consistency
+- Design improvements
+- Time reductions or increases
+
+---
+
+## Trial Management
+
+Users can:
+
+- Add trials
+- Delete trials
+- Review previous results
+- Compare experiment outcomes
+
+---
+
+# Installation Guide
+
+## Step 1 – Clone Repository
 
 ```bash
-npm run reset-project
+git clone <repository-url>
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## Step 2 – Install Dependencies
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Install graph dependencies:
 
-## Join the community
+```bash
+npm install react-native-chart-kit react-native-svg
+```
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Step 3 – Start Expo
+
+```bash
+npx expo start
+```
+
+---
+
+## Step 4 – Run on Phone
+
+1. Install Expo Go
+2. Connect to the same Wi-Fi network
+3. Scan the QR code
+4. Launch the app
+
+---
+
+# Building APK
+
+To generate an Android APK build:
+
+```bash
+npm install -g eas-cli
+```
+
+Login:
+
+```bash
+eas login
+```
+
+Configure EAS:
+
+```bash
+eas build:configure
+```
+
+Generate Android build:
+
+```bash
+eas build -p android
+```
+
+Expo will generate an installable APK or AAB file.
+
+---
+
+# Testing
+
+## Manual Testing
+
+The application was manually tested for:
+
+- Input handling
+- Trial recording
+- Physics calculations
+- Graph rendering
+- Prototype switching
+- Trial deletion
+
+---
+
+## Device Testing
+
+The application was tested using:
+
+- Expo Go
+- Android mobile device
+- Web preview
+
+---
+
+# Known Limitations
+
+Current limitations include:
+
+- No persistent database storage
+- No Firebase integration
+- No real camera/video recording
+- No GPS integration yet
+- No authentication system
+
+These features may be implemented in future development sprints.
+
+---
+
+# Future Improvements
+
+Potential future improvements include:
+
+- Real-time camera recording
+- Firebase cloud storage
+- GPS location tagging
+- Team leaderboards
+- Sensor integration
+- Exporting experiment data
+- Improved analytics dashboards
+- Authentication system
+- Offline support
+
+---
+
+# Agile Development Approach
+
+The project follows an Agile-inspired sprint workflow.
+
+Development involved:
+
+- Planning features
+- Incremental implementation
+- Continuous testing
+- Iterative improvements
+- Prototype experimentation
+
+---
+
+# Educational Purpose
+
+The application is designed to support:
+
+- STEMM education
+- Engineering design thinking
+- Data analysis
+- Physics learning
+- Experiment-based problem solving
+
+The app encourages students to test hypotheses, analyse results, and iteratively improve designs.
+
+---
+
+# Conclusion
+
+STEMM Lab demonstrates how mobile application development can support educational STEMM activities through interactive experimentation, data collection, and real-time analysis.
+
+The current implementation successfully delivers a functional parachute experiment system aligned with the project specification while providing a strong foundation for future feature expansion.
