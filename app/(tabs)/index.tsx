@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   View,
   Text,
@@ -8,15 +9,31 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
+
 import { LineChart } from "react-native-chart-kit";
 
+// FIREBASE
+import { auth, db } from "../../firebase";
+
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+
+import {
+  collection,
+  addDoc,
+  getDocs,
+} from "firebase/firestore";
+
 const screenWidth = Dimensions.get("window").width;
+
 const GRAVITY = 9.8;
 
 const DEFAULT_HEIGHT = 1;
 const DEFAULT_MASS = 0.2;
 
-const getIdealTime = (h) => Math.sqrt((2 * h) / GRAVITY);
+const getIdealTime = (h: number) => Math.sqrt((2 * h) / GRAVITY);
 
 const PROTOTYPES = [
   { key: "baseline", label: "Baseline (Vacuum)" },
@@ -28,6 +45,11 @@ const PROTOTYPES = [
 export default function App() {
   const [activeTab, setActiveTab] = useState("baseline");
 
+  // AUTH
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // LAB DATA
   const idealTimeExact = getIdealTime(DEFAULT_HEIGHT);
 
   const [time, setTime] = useState(String(idealTimeExact));
@@ -43,25 +65,75 @@ export default function App() {
     p3: [],
   });
 
+  // ---------------- AUTH ----------------
+
+  const signUp = async () => {
+    try {
+      const userCredential =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+      console.log("SIGNED UP:", userCredential.user.email);
+
+      alert("Signup successful");
+    } catch (error: any) {
+      console.log(error);
+      alert(error.message);
+    }
+  };
+
+  const login = async () => {
+    try {
+      const userCredential =
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+      console.log("LOGGED IN:", userCredential.user.email);
+
+      alert("Login successful");
+    } catch (error: any) {
+      console.log(error);
+      alert(error.message);
+    }
+  };
+
   // ---------------- RECORD ----------------
+
   const fakeRecord = () => {
     setRecorded(true);
   };
 
   // ---------------- PHYSICS ----------------
-  const calculatePhysics = (t, h, m) => {
+
+  const calculatePhysics = (
+    t: number,
+    h: number,
+    m: number
+  ) => {
     const idealTime = getIdealTime(h);
 
     const acceleration = (2 * h) / (t * t);
+
     const velocity = acceleration * t;
 
     const weight = m * GRAVITY;
+
     const netForce = m * acceleration;
 
     let dragForce = weight - netForce;
-    if (Math.abs(dragForce) < 1e-6) dragForce = 0;
+
+    if (Math.abs(dragForce) < 1e-6) {
+      dragForce = 0;
+    }
 
     const timeDiff = t - idealTime;
+
     const gForce = acceleration / GRAVITY;
 
     return {
@@ -76,10 +148,46 @@ export default function App() {
     };
   };
 
-  // ---------------- ADD ----------------
-  const addExperiment = () => {
+  // ---------------- FIRESTORE SAVE ----------------
+
+  const saveToFirestore = async (experiment: any) => {
+    try {
+      await addDoc(
+        collection(db, "experiments"),
+        experiment
+      );
+
+      console.log("Saved to Firestore");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ---------------- LOAD FIRESTORE ----------------
+
+  const loadFirestoreData = async () => {
+    try {
+      const querySnapshot = await getDocs(
+        collection(db, "experiments")
+      );
+
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, doc.data());
+      });
+
+      alert("Loaded Firestore data");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ---------------- ADD EXPERIMENT ----------------
+
+  const addExperiment = async () => {
     const t = parseFloat(time);
+
     const h = parseFloat(height);
+
     const m = parseFloat(mass);
 
     if (isNaN(t) || t <= 0) return;
@@ -88,9 +196,13 @@ export default function App() {
 
     const newExp = {
       id: Date.now(),
+      prototype: activeTab,
       time: t,
+      height: h,
+      mass: m,
       physics,
       recorded,
+      createdAt: new Date().toISOString(),
     };
 
     setData({
@@ -98,21 +210,79 @@ export default function App() {
       [activeTab]: [...data[activeTab], newExp],
     });
 
+    await saveToFirestore(newExp);
+
     setRecorded(false);
   };
 
-  const deleteExperiment = (id) => {
+  // ---------------- DELETE ----------------
+
+  const deleteExperiment = (id: number) => {
     setData({
       ...data,
-      [activeTab]: data[activeTab].filter((e) => e.id !== id),
+      [activeTab]: data[activeTab].filter(
+        (e: any) => e.id !== id
+      ),
     });
   };
 
-  const getTimes = (arr) => arr.map((e) => e.time);
+  const getTimes = (arr: any[]) =>
+    arr.map((e) => e.time);
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>🪂 Parachute Lab</Text>
+      <Text style={styles.header}>
+        🪂 Parachute Lab
+      </Text>
+
+      {/* AUTH */}
+      <View style={styles.card}>
+        <Text style={styles.title}>
+          Firebase Auth
+        </Text>
+
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+        />
+
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          style={styles.input}
+        />
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={signUp}
+        >
+          <Text style={styles.buttonText}>
+            Sign Up
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.recordBtn}
+          onPress={login}
+        >
+          <Text style={styles.buttonText}>
+            Login
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.firestoreBtn}
+          onPress={loadFirestoreData}
+        >
+          <Text style={styles.buttonText}>
+            Load Firestore Data
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* TABS */}
       <View style={styles.tabs}>
@@ -121,46 +291,92 @@ export default function App() {
             key={p.key}
             style={[
               styles.tab,
-              activeTab === p.key && styles.activeTab,
+              activeTab === p.key &&
+                styles.activeTab,
             ]}
-            onPress={() => setActiveTab(p.key)}
+            onPress={() =>
+              setActiveTab(p.key)
+            }
           >
-            <Text style={styles.tabText}>{p.label}</Text>
+            <Text style={styles.tabText}>
+              {p.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* INPUT */}
       <View style={styles.card}>
-        <Text style={styles.label}>Time (s)</Text>
-        <TextInput value={time} onChangeText={setTime} style={styles.input} />
+        <Text style={styles.label}>
+          Time (s)
+        </Text>
 
-        <Text style={styles.label}>Height (m)</Text>
-        <TextInput value={height} onChangeText={setHeight} style={styles.input} />
+        <TextInput
+          value={time}
+          onChangeText={setTime}
+          style={styles.input}
+        />
 
-        <Text style={styles.label}>Mass (kg)</Text>
-        <TextInput value={mass} onChangeText={setMass} style={styles.input} />
+        <Text style={styles.label}>
+          Height (m)
+        </Text>
 
-        <TouchableOpacity style={styles.recordBtn} onPress={fakeRecord}>
+        <TextInput
+          value={height}
+          onChangeText={setHeight}
+          style={styles.input}
+        />
+
+        <Text style={styles.label}>
+          Mass (kg)
+        </Text>
+
+        <TextInput
+          value={mass}
+          onChangeText={setMass}
+          style={styles.input}
+        />
+
+        <TouchableOpacity
+          style={styles.recordBtn}
+          onPress={fakeRecord}
+        >
           <Text style={styles.buttonText}>
-            {recorded ? "Recorded ✔" : "Record Experiment"}
+            {recorded
+              ? "Recorded ✔"
+              : "Record Experiment"}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={addExperiment}>
-          <Text style={styles.buttonText}>Add Trial</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={addExperiment}
+        >
+          <Text style={styles.buttonText}>
+            Add Trial
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* GRAPH AFTER INPUT */}
+      {/* GRAPH */}
       {data[activeTab].length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.title}>📈 Trial Improvement</Text>
+          <Text style={styles.title}>
+            📈 Trial Improvement
+          </Text>
 
           <LineChart
             data={{
-              labels: data[activeTab].map((_, i) => `T${i + 1}`),
-              datasets: [{ data: getTimes(data[activeTab]) }],
+              labels: data[activeTab].map(
+                (_, i) => `T${i + 1}`
+              ),
+              datasets: [
+                {
+                  data: getTimes(
+                    data[activeTab]
+                  ),
+                },
+              ],
             }}
             width={screenWidth - 20}
             height={220}
@@ -169,46 +385,106 @@ export default function App() {
         </View>
       )}
 
-      {/* RESULTS (LATEST FIRST) */}
-      {[...data[activeTab]].reverse().map((e, i) => (
-        <View key={e.id} style={styles.card}>
-          <Text style={styles.title}>
-            Trial {data[activeTab].length - i}
-          </Text>
+      {/* RESULTS */}
+      {[...data[activeTab]]
+        .reverse()
+        .map((e: any, i) => (
+          <View key={e.id} style={styles.card}>
+            <Text style={styles.title}>
+              Trial{" "}
+              {data[activeTab].length - i}
+            </Text>
 
-          {e.recorded && <Text style={{ color: "green" }}>📹 Recorded</Text>}
+            {e.recorded && (
+              <Text style={{ color: "green" }}>
+                📹 Recorded
+              </Text>
+            )}
 
-          {/* IDEAL */}
-          <Text style={styles.section}>Ideal (Vacuum)</Text>
-          <Text>Time: {e.physics.idealTime.toFixed(6)} s</Text>
-          <Text>Drag Force: 0.000000 N</Text>
+            <Text style={styles.section}>
+              Ideal (Vacuum)
+            </Text>
 
-          {/* EXPERIMENT */}
-          <Text style={styles.section}>Experiment</Text>
+            <Text>
+              Time:{" "}
+              {e.physics.idealTime.toFixed(
+                6
+              )}{" "}
+              s
+            </Text>
 
-          <Text>Weight: {e.physics.weight.toFixed(6)} N</Text>
-          <Text>Net Force: {e.physics.netForce.toFixed(6)} N</Text>
+            <Text>
+              Drag Force: 0.000000 N
+            </Text>
 
-          <Text style={{ fontWeight: "bold" }}>
-            Drag Force: {e.physics.dragForce.toFixed(6)} N
-          </Text>
+            <Text style={styles.section}>
+              Experiment
+            </Text>
 
-          <Text>
-            Time Difference: {e.physics.timeDiff.toFixed(6)} s
-          </Text>
+            <Text>
+              Weight:{" "}
+              {e.physics.weight.toFixed(6)} N
+            </Text>
 
-          <Text>Acceleration: {e.physics.acceleration.toFixed(6)} m/s²</Text>
-          <Text>Velocity: {e.physics.velocity.toFixed(6)} m/s</Text>
-          <Text>G-Force: {e.physics.gForce.toFixed(6)} g</Text>
+            <Text>
+              Net Force:{" "}
+              {e.physics.netForce.toFixed(6)} N
+            </Text>
 
-          <TouchableOpacity
-            style={styles.deleteBtn}
-            onPress={() => deleteExperiment(e.id)}
-          >
-            <Text style={styles.buttonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+            <Text
+              style={{ fontWeight: "bold" }}
+            >
+              Drag Force:{" "}
+              {e.physics.dragForce.toFixed(
+                6
+              )}{" "}
+              N
+            </Text>
+
+            <Text>
+              Time Difference:{" "}
+              {e.physics.timeDiff.toFixed(
+                6
+              )}{" "}
+              s
+            </Text>
+
+            <Text>
+              Acceleration:{" "}
+              {e.physics.acceleration.toFixed(
+                6
+              )}{" "}
+              m/s²
+            </Text>
+
+            <Text>
+              Velocity:{" "}
+              {e.physics.velocity.toFixed(
+                6
+              )}{" "}
+              m/s
+            </Text>
+
+            <Text>
+              G-Force:{" "}
+              {e.physics.gForce.toFixed(
+                6
+              )}{" "}
+              g
+            </Text>
+
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={() =>
+                deleteExperiment(e.id)
+              }
+            >
+              <Text style={styles.buttonText}>
+                Delete
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ))}
     </ScrollView>
   );
 }
@@ -221,8 +497,15 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  header: { fontSize: 22, fontWeight: "bold" },
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+
+  header: {
+    fontSize: 22,
+    fontWeight: "bold",
+  },
 
   card: {
     backgroundColor: "#fff",
@@ -237,7 +520,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  label: { fontWeight: "600" },
+  label: {
+    fontWeight: "600",
+  },
 
   section: {
     marginTop: 6,
@@ -247,6 +532,12 @@ const styles = StyleSheet.create({
 
   button: {
     backgroundColor: "#4f46e5",
+    padding: 10,
+    marginTop: 5,
+  },
+
+  firestoreBtn: {
+    backgroundColor: "#f59e0b",
     padding: 10,
     marginTop: 5,
   },
@@ -263,14 +554,32 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  buttonText: { color: "#fff", textAlign: "center" },
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
+  },
 
-  tabs: { flexDirection: "row", marginBottom: 10 },
+  tabs: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
 
-  tab: { flex: 1, padding: 10, backgroundColor: "#ccc" },
-  activeTab: { backgroundColor: "#4f46e5" },
+  tab: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#ccc",
+  },
 
-  tabText: { color: "#fff", textAlign: "center" },
+  activeTab: {
+    backgroundColor: "#4f46e5",
+  },
 
-  title: { fontWeight: "bold" },
+  tabText: {
+    color: "#fff",
+    textAlign: "center",
+  },
+
+  title: {
+    fontWeight: "bold",
+  },
 });
