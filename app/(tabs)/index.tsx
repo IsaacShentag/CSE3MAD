@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   View,
@@ -18,12 +18,13 @@ import { auth, db } from "../../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
 } from "firebase/auth";
 
 import {
   collection,
   addDoc,
-  getDocs,
 } from "firebase/firestore";
 
 const screenWidth = Dimensions.get("window").width;
@@ -33,7 +34,8 @@ const GRAVITY = 9.8;
 const DEFAULT_HEIGHT = 1;
 const DEFAULT_MASS = 0.2;
 
-const getIdealTime = (h: number) => Math.sqrt((2 * h) / GRAVITY);
+const getIdealTime = (h: number) =>
+  Math.sqrt((2 * h) / GRAVITY);
 
 const PROTOTYPES = [
   { key: "baseline", label: "Baseline (Vacuum)" },
@@ -43,20 +45,38 @@ const PROTOTYPES = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("baseline");
+  const [activeTab, setActiveTab] =
+    useState("baseline");
 
   // AUTH
+  const [username, setUsername] =
+    useState("");
+
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [user, setUser] = useState<any>(null);
 
   // LAB DATA
-  const idealTimeExact = getIdealTime(DEFAULT_HEIGHT);
+  const idealTimeExact =
+    getIdealTime(DEFAULT_HEIGHT);
 
-  const [time, setTime] = useState(String(idealTimeExact));
-  const [height, setHeight] = useState(String(DEFAULT_HEIGHT));
-  const [mass, setMass] = useState(String(DEFAULT_MASS));
+  const [time, setTime] = useState(
+    String(idealTimeExact)
+  );
 
-  const [recorded, setRecorded] = useState(false);
+  const [height, setHeight] = useState(
+    String(DEFAULT_HEIGHT)
+  );
+
+  const [mass, setMass] = useState(
+    String(DEFAULT_MASS)
+  );
+
+  const [recorded, setRecorded] =
+    useState(false);
 
   const [data, setData] = useState({
     baseline: [],
@@ -65,7 +85,20 @@ export default function App() {
     p3: [],
   });
 
-  // ---------------- AUTH ----------------
+  // ================= AUTH STATE =================
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        setUser(currentUser);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  // ================= SIGNUP =================
 
   const signUp = async () => {
     try {
@@ -76,40 +109,64 @@ export default function App() {
           password
         );
 
-      console.log("SIGNED UP:", userCredential.user.email);
+      await addDoc(
+        collection(db, "users"),
+        {
+          uid: userCredential.user.uid,
+          username: username,
+          email: email,
+          createdAt:
+            new Date().toISOString(),
+        }
+      );
 
       alert("Signup successful");
+
     } catch (error: any) {
       console.log(error);
       alert(error.message);
     }
   };
+
+  // ================= LOGIN =================
 
   const login = async () => {
     try {
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-      console.log("LOGGED IN:", userCredential.user.email);
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
       alert("Login successful");
+
     } catch (error: any) {
       console.log(error);
       alert(error.message);
     }
   };
 
-  // ---------------- RECORD ----------------
+  // ================= LOGOUT =================
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+
+      alert("Logged out");
+
+    } catch (error: any) {
+      console.log(error);
+      alert(error.message);
+    }
+  };
+
+  // ================= RECORD =================
 
   const fakeRecord = () => {
     setRecorded(true);
   };
 
-  // ---------------- PHYSICS ----------------
+  // ================= PHYSICS =================
 
   const calculatePhysics = (
     t: number,
@@ -118,15 +175,18 @@ export default function App() {
   ) => {
     const idealTime = getIdealTime(h);
 
-    const acceleration = (2 * h) / (t * t);
+    const acceleration =
+      (2 * h) / (t * t);
 
     const velocity = acceleration * t;
 
     const weight = m * GRAVITY;
 
-    const netForce = m * acceleration;
+    const netForce =
+      m * acceleration;
 
-    let dragForce = weight - netForce;
+    let dragForce =
+      weight - netForce;
 
     if (Math.abs(dragForce) < 1e-6) {
       dragForce = 0;
@@ -134,7 +194,8 @@ export default function App() {
 
     const timeDiff = t - idealTime;
 
-    const gForce = acceleration / GRAVITY;
+    const gForce =
+      acceleration / GRAVITY;
 
     return {
       velocity,
@@ -148,40 +209,27 @@ export default function App() {
     };
   };
 
-  // ---------------- FIRESTORE SAVE ----------------
+  // ================= SAVE FIRESTORE =================
 
-  const saveToFirestore = async (experiment: any) => {
+  const saveToFirestore = async (
+    experiment: any
+  ) => {
     try {
       await addDoc(
         collection(db, "experiments"),
         experiment
       );
 
-      console.log("Saved to Firestore");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // ---------------- LOAD FIRESTORE ----------------
-
-  const loadFirestoreData = async () => {
-    try {
-      const querySnapshot = await getDocs(
-        collection(db, "experiments")
+      console.log(
+        "Saved to Firestore"
       );
 
-      querySnapshot.forEach((doc) => {
-        console.log(doc.id, doc.data());
-      });
-
-      alert("Loaded Firestore data");
     } catch (error) {
       console.log(error);
     }
   };
 
-  // ---------------- ADD EXPERIMENT ----------------
+  // ================= ADD EXPERIMENT =================
 
   const addExperiment = async () => {
     const t = parseFloat(time);
@@ -190,24 +238,44 @@ export default function App() {
 
     const m = parseFloat(mass);
 
-    if (isNaN(t) || t <= 0) return;
+    if (isNaN(t) || t <= 0)
+      return;
 
-    const physics = calculatePhysics(t, h, m);
+    const physics =
+      calculatePhysics(t, h, m);
 
     const newExp = {
       id: Date.now(),
+
+      username:
+        username || "anonymous",
+
+      userEmail:
+        user?.email || "anonymous",
+
       prototype: activeTab,
+
       time: t,
+
       height: h,
+
       mass: m,
+
       physics,
+
       recorded,
-      createdAt: new Date().toISOString(),
+
+      createdAt:
+        new Date().toISOString(),
     };
 
     setData({
       ...data,
-      [activeTab]: [...data[activeTab], newExp],
+
+      [activeTab]: [
+        ...data[activeTab],
+        newExp,
+      ],
     });
 
     await saveToFirestore(newExp);
@@ -215,14 +283,18 @@ export default function App() {
     setRecorded(false);
   };
 
-  // ---------------- DELETE ----------------
+  // ================= DELETE =================
 
-  const deleteExperiment = (id: number) => {
+  const deleteExperiment = (
+    id: number
+  ) => {
     setData({
       ...data,
-      [activeTab]: data[activeTab].filter(
-        (e: any) => e.id !== id
-      ),
+
+      [activeTab]:
+        data[activeTab].filter(
+          (e: any) => e.id !== id
+        ),
     });
   };
 
@@ -235,56 +307,103 @@ export default function App() {
         🪂 Parachute Lab
       </Text>
 
-      {/* AUTH */}
+      {/* ================= AUTH CARD ================= */}
+
       <View style={styles.card}>
         <Text style={styles.title}>
-          Firebase Auth
+          Firebase Authentication
         </Text>
 
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          style={styles.input}
-        />
+        {user ? (
+          // ================= LOGGED IN =================
+          <View style={styles.loggedInBox}>
 
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={styles.input}
-        />
+            <Text style={styles.loggedInText}>
+              ✅ Logged In
+            </Text>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={signUp}
-        >
-          <Text style={styles.buttonText}>
-            Sign Up
-          </Text>
-        </TouchableOpacity>
+            <Text style={styles.userText}>
+              Username: {username}
+            </Text>
 
-        <TouchableOpacity
-          style={styles.recordBtn}
-          onPress={login}
-        >
-          <Text style={styles.buttonText}>
-            Login
-          </Text>
-        </TouchableOpacity>
+            <Text style={styles.userText}>
+              Email: {user.email}
+            </Text>
 
-        <TouchableOpacity
-          style={styles.firestoreBtn}
-          onPress={loadFirestoreData}
-        >
-          <Text style={styles.buttonText}>
-            Load Firestore Data
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={logout}
+            >
+              <Text style={styles.buttonText}>
+                Logout
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+        ) : (
+          // ================= LOGGED OUT =================
+          <>
+
+            <Text
+              style={{
+                color: "red",
+                marginBottom: 10,
+              }}
+            >
+              ❌ Not Logged In
+            </Text>
+
+            {/* USERNAME */}
+            <TextInput
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              style={styles.input}
+            />
+
+            {/* EMAIL */}
+            <TextInput
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+            />
+
+            {/* PASSWORD */}
+            <TextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+            />
+
+            {/* SIGNUP */}
+            <TouchableOpacity
+              style={styles.button}
+              onPress={signUp}
+            >
+              <Text style={styles.buttonText}>
+                Sign Up
+              </Text>
+            </TouchableOpacity>
+
+            {/* LOGIN */}
+            <TouchableOpacity
+              style={styles.recordBtn}
+              onPress={login}
+            >
+              <Text style={styles.buttonText}>
+                Login
+              </Text>
+            </TouchableOpacity>
+
+          </>
+        )}
       </View>
 
-      {/* TABS */}
+      {/* ================= TABS ================= */}
+
       <View style={styles.tabs}>
         {PROTOTYPES.map((p) => (
           <TouchableOpacity
@@ -305,8 +424,10 @@ export default function App() {
         ))}
       </View>
 
-      {/* INPUT */}
+      {/* ================= INPUT ================= */}
+
       <View style={styles.card}>
+
         <Text style={styles.label}>
           Time (s)
         </Text>
@@ -356,20 +477,25 @@ export default function App() {
             Add Trial
           </Text>
         </TouchableOpacity>
+
       </View>
 
-      {/* GRAPH */}
+      {/* ================= GRAPH ================= */}
+
       {data[activeTab].length > 0 && (
         <View style={styles.card}>
+
           <Text style={styles.title}>
             📈 Trial Improvement
           </Text>
 
           <LineChart
             data={{
-              labels: data[activeTab].map(
-                (_, i) => `T${i + 1}`
-              ),
+              labels:
+                data[activeTab].map(
+                  (_, i) => `T${i + 1}`
+                ),
+
               datasets: [
                 {
                   data: getTimes(
@@ -378,125 +504,32 @@ export default function App() {
                 },
               ],
             }}
+
             width={screenWidth - 20}
+
             height={220}
+
             chartConfig={chartConfig}
           />
+
         </View>
       )}
-
-      {/* RESULTS */}
-      {[...data[activeTab]]
-        .reverse()
-        .map((e: any, i) => (
-          <View key={e.id} style={styles.card}>
-            <Text style={styles.title}>
-              Trial{" "}
-              {data[activeTab].length - i}
-            </Text>
-
-            {e.recorded && (
-              <Text style={{ color: "green" }}>
-                📹 Recorded
-              </Text>
-            )}
-
-            <Text style={styles.section}>
-              Ideal (Vacuum)
-            </Text>
-
-            <Text>
-              Time:{" "}
-              {e.physics.idealTime.toFixed(
-                6
-              )}{" "}
-              s
-            </Text>
-
-            <Text>
-              Drag Force: 0.000000 N
-            </Text>
-
-            <Text style={styles.section}>
-              Experiment
-            </Text>
-
-            <Text>
-              Weight:{" "}
-              {e.physics.weight.toFixed(6)} N
-            </Text>
-
-            <Text>
-              Net Force:{" "}
-              {e.physics.netForce.toFixed(6)} N
-            </Text>
-
-            <Text
-              style={{ fontWeight: "bold" }}
-            >
-              Drag Force:{" "}
-              {e.physics.dragForce.toFixed(
-                6
-              )}{" "}
-              N
-            </Text>
-
-            <Text>
-              Time Difference:{" "}
-              {e.physics.timeDiff.toFixed(
-                6
-              )}{" "}
-              s
-            </Text>
-
-            <Text>
-              Acceleration:{" "}
-              {e.physics.acceleration.toFixed(
-                6
-              )}{" "}
-              m/s²
-            </Text>
-
-            <Text>
-              Velocity:{" "}
-              {e.physics.velocity.toFixed(
-                6
-              )}{" "}
-              m/s
-            </Text>
-
-            <Text>
-              G-Force:{" "}
-              {e.physics.gForce.toFixed(
-                6
-              )}{" "}
-              g
-            </Text>
-
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={() =>
-                deleteExperiment(e.id)
-              }
-            >
-              <Text style={styles.buttonText}>
-                Delete
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ))}
     </ScrollView>
   );
 }
 
 const chartConfig = {
   backgroundGradientFrom: "#fff",
+
   backgroundGradientTo: "#fff",
+
   decimalPlaces: 6,
+
   color: () => "#4f46e5",
 };
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     padding: 10,
@@ -524,20 +557,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  section: {
-    marginTop: 6,
-    fontWeight: "bold",
-    color: "#4f46e5",
-  },
-
   button: {
     backgroundColor: "#4f46e5",
-    padding: 10,
-    marginTop: 5,
-  },
-
-  firestoreBtn: {
-    backgroundColor: "#f59e0b",
     padding: 10,
     marginTop: 5,
   },
@@ -548,10 +569,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
-  deleteBtn: {
+  logoutBtn: {
     backgroundColor: "#ef4444",
-    padding: 8,
-    marginTop: 6,
+    padding: 10,
+    marginTop: 10,
   },
 
   buttonText: {
@@ -581,5 +602,24 @@ const styles = StyleSheet.create({
 
   title: {
     fontWeight: "bold",
+    marginBottom: 10,
+  },
+
+  loggedInBox: {
+    backgroundColor: "#d1fae5",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+
+  loggedInText: {
+    fontWeight: "bold",
+    color: "green",
+    marginBottom: 5,
+  },
+
+  userText: {
+    fontSize: 16,
+    marginBottom: 5,
   },
 });
