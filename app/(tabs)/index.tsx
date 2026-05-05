@@ -8,12 +8,15 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 
 import { LineChart } from "react-native-chart-kit";
 
-// FIREBASE
-import { auth, db } from "../../firebase";
+import * as SQLite from "expo-sqlite";
+
+// FIREBASE AUTH ONLY
+import { auth } from "../../firebase";
 
 import {
   createUserWithEmailAndPassword,
@@ -22,12 +25,13 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-import {
-  collection,
-  addDoc,
-} from "firebase/firestore";
-
 const screenWidth = Dimensions.get("window").width;
+
+// ================= SQLITE DATABASE =================
+
+const db = SQLite.openDatabaseSync(
+  "parachuteLab.db"
+);
 
 const GRAVITY = 9.8;
 
@@ -38,17 +42,33 @@ const getIdealTime = (h: number) =>
   Math.sqrt((2 * h) / GRAVITY);
 
 const PROTOTYPES = [
-  { key: "baseline", label: "Baseline (Vacuum)" },
-  { key: "p1", label: "Prototype 1" },
-  { key: "p2", label: "Prototype 2" },
-  { key: "p3", label: "Prototype 3" },
+  {
+    key: "baseline",
+    label: "Baseline (Vacuum)",
+  },
+
+  {
+    key: "p1",
+    label: "Prototype 1",
+  },
+
+  {
+    key: "p2",
+    label: "Prototype 2",
+  },
+
+  {
+    key: "p3",
+    label: "Prototype 3",
+  },
 ];
 
 export default function App() {
   const [activeTab, setActiveTab] =
     useState("baseline");
 
-  // AUTH
+  // ================= AUTH =================
+
   const [username, setUsername] =
     useState("");
 
@@ -57,9 +77,12 @@ export default function App() {
   const [password, setPassword] =
     useState("");
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(
+    null
+  );
 
-  // LAB DATA
+  // ================= INPUTS =================
+
   const idealTimeExact =
     getIdealTime(DEFAULT_HEIGHT);
 
@@ -78,22 +101,114 @@ export default function App() {
   const [recorded, setRecorded] =
     useState(false);
 
-  const [data, setData] = useState({
+  // ================= DATABASE DATA =================
+
+  const [data, setData] = useState<any>({
     baseline: [],
     p1: [],
     p2: [],
     p3: [],
   });
 
-  // ================= AUTH STATE =================
+  // ================= CREATE DATABASE TABLE =================
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (currentUser) => {
-        setUser(currentUser);
-      }
-    );
+    createTable();
+    loadExperiments();
+  }, []);
+
+  const createTable = async () => {
+    try {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS experiments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+          username TEXT,
+
+          userEmail TEXT,
+
+          prototype TEXT,
+
+          time REAL,
+
+          height REAL,
+
+          mass REAL,
+
+          velocity REAL,
+
+          acceleration REAL,
+
+          weight REAL,
+
+          netForce REAL,
+
+          dragForce REAL,
+
+          timeDiff REAL,
+
+          gForce REAL,
+
+          createdAt TEXT
+        );
+      `);
+
+      console.log(
+        "SQLite table created"
+      );
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ================= LOAD FROM DATABASE =================
+
+  const loadExperiments = async () => {
+    try {
+      const rows: any =
+        await db.getAllAsync(
+          `SELECT * FROM experiments ORDER BY id DESC`
+        );
+
+      const groupedData: any = {
+        baseline: [],
+        p1: [],
+        p2: [],
+        p3: [],
+      };
+
+      rows.forEach((row: any) => {
+        if (
+          groupedData[row.prototype]
+        ) {
+          groupedData[
+            row.prototype
+          ].push(row);
+        }
+      });
+
+      setData(groupedData);
+
+      console.log(
+        "Loaded from SQLite database"
+      );
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ================= FIREBASE AUTH =================
+
+  useEffect(() => {
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (currentUser) => {
+          setUser(currentUser);
+        }
+      );
 
     return unsubscribe;
   }, []);
@@ -102,28 +217,15 @@ export default function App() {
 
   const signUp = async () => {
     try {
-      const userCredential =
-        await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-      await addDoc(
-        collection(db, "users"),
-        {
-          uid: userCredential.user.uid,
-          username: username,
-          email: email,
-          createdAt:
-            new Date().toISOString(),
-        }
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
 
       alert("Signup successful");
 
     } catch (error: any) {
-      console.log(error);
       alert(error.message);
     }
   };
@@ -141,7 +243,6 @@ export default function App() {
       alert("Login successful");
 
     } catch (error: any) {
-      console.log(error);
       alert(error.message);
     }
   };
@@ -155,7 +256,6 @@ export default function App() {
       alert("Logged out");
 
     } catch (error: any) {
-      console.log(error);
       alert(error.message);
     }
   };
@@ -185,14 +285,11 @@ export default function App() {
     const netForce =
       m * acceleration;
 
-    let dragForce =
+    const dragForce =
       weight - netForce;
 
-    if (Math.abs(dragForce) < 1e-6) {
-      dragForce = 0;
-    }
-
-    const timeDiff = t - idealTime;
+    const timeDiff =
+      t - idealTime;
 
     const gForce =
       acceleration / GRAVITY;
@@ -205,23 +302,91 @@ export default function App() {
       dragForce,
       timeDiff,
       gForce,
-      idealTime,
     };
   };
 
-  // ================= SAVE FIRESTORE =================
+  // ================= SAVE TO DATABASE =================
 
-  const saveToFirestore = async (
-    experiment: any
-  ) => {
+  const addExperiment = async () => {
     try {
-      await addDoc(
-        collection(db, "experiments"),
-        experiment
+      const t = parseFloat(time);
+
+      const h = parseFloat(height);
+
+      const m = parseFloat(mass);
+
+      if (isNaN(t) || t <= 0) {
+        alert("Invalid time");
+        return;
+      }
+
+      const physics =
+        calculatePhysics(
+          t,
+          h,
+          m
+        );
+
+      await db.runAsync(
+        `
+        INSERT INTO experiments (
+          username,
+          userEmail,
+          prototype,
+          time,
+          height,
+          mass,
+          velocity,
+          acceleration,
+          weight,
+          netForce,
+          dragForce,
+          timeDiff,
+          gForce,
+          createdAt
+        )
+
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          username ||
+            "anonymous",
+
+          user?.email ||
+            "anonymous",
+
+          activeTab,
+
+          t,
+
+          h,
+
+          m,
+
+          physics.velocity,
+
+          physics.acceleration,
+
+          physics.weight,
+
+          physics.netForce,
+
+          physics.dragForce,
+
+          physics.timeDiff,
+
+          physics.gForce,
+
+          new Date().toISOString(),
+        ]
       );
 
-      console.log(
-        "Saved to Firestore"
+      await loadExperiments();
+
+      setRecorded(false);
+
+      alert(
+        "Experiment saved to SQLite database"
       );
 
     } catch (error) {
@@ -229,85 +394,98 @@ export default function App() {
     }
   };
 
-  // ================= ADD EXPERIMENT =================
+  // ================= DELETE SINGLE =================
 
-  const addExperiment = async () => {
-    const t = parseFloat(time);
+  const deleteExperiment =
+    async (id: number) => {
+      try {
+        await db.runAsync(
+          `DELETE FROM experiments WHERE id = ?`,
+          [id]
+        );
 
-    const h = parseFloat(height);
+        await loadExperiments();
 
-    const m = parseFloat(mass);
+        alert(
+          "Record deleted"
+        );
 
-    if (isNaN(t) || t <= 0)
-      return;
-
-    const physics =
-      calculatePhysics(t, h, m);
-
-    const newExp = {
-      id: Date.now(),
-
-      username:
-        username || "anonymous",
-
-      userEmail:
-        user?.email || "anonymous",
-
-      prototype: activeTab,
-
-      time: t,
-
-      height: h,
-
-      mass: m,
-
-      physics,
-
-      recorded,
-
-      createdAt:
-        new Date().toISOString(),
+      } catch (error) {
+        console.log(error);
+      }
     };
 
-    setData({
-      ...data,
+  // ================= DELETE ALL =================
 
-      [activeTab]: [
-        ...data[activeTab],
-        newExp,
-      ],
-    });
+  const deleteAllExperiments =
+    () => {
+      Alert.alert(
+        "Delete Database",
+        "Delete ALL experiment data and start fresh?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
 
-    await saveToFirestore(newExp);
+          {
+            text: "Delete All",
+            style:
+              "destructive",
 
-    setRecorded(false);
-  };
+            onPress:
+              async () => {
+                try {
+                  await db.runAsync(
+                    `DELETE FROM experiments`
+                  );
 
-  // ================= DELETE =================
+                  await loadExperiments();
 
-  const deleteExperiment = (
-    id: number
-  ) => {
-    setData({
-      ...data,
+                  alert(
+                    "Database cleared successfully"
+                  );
 
-      [activeTab]:
-        data[activeTab].filter(
-          (e: any) => e.id !== id
-        ),
-    });
-  };
+                } catch (
+                  error
+                ) {
+                  console.log(
+                    error
+                  );
+                }
+              },
+          },
+        ]
+      );
+    };
+
+  // ================= RESTORE / RELOAD =================
+
+  const restoreDatabase =
+    async () => {
+      await loadExperiments();
+
+      alert(
+        "Database restored/reloaded"
+      );
+    };
 
   const getTimes = (arr: any[]) =>
-    arr.map((e) => e.time);
+    arr.map(
+      (e: any) => e.time
+    );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+    >
+      {/* HEADER */}
+
       <Text style={styles.header}>
         🪂 Parachute Lab
       </Text>
 
-      {/* ================= AUTH CARD ================= */}
+      {/* ================= AUTH SECTION ================= */}
 
       <View style={styles.card}>
         <Text style={styles.title}>
@@ -315,91 +493,198 @@ export default function App() {
         </Text>
 
         {user ? (
-          // ================= LOGGED IN =================
-          <View style={styles.loggedInBox}>
-
-            <Text style={styles.loggedInText}>
+          <View
+            style={
+              styles.loggedInBox
+            }
+          >
+            <Text
+              style={
+                styles.loggedInText
+              }
+            >
               ✅ Logged In
             </Text>
 
-            <Text style={styles.userText}>
-              Username: {username}
+            <Text
+              style={
+                styles.userText
+              }
+            >
+              Username:{" "}
+              {username ||
+                "Unknown"}
             </Text>
 
-            <Text style={styles.userText}>
-              Email: {user.email}
+            <Text
+              style={
+                styles.userText
+              }
+            >
+              Email:{" "}
+              {user.email}
             </Text>
 
             <TouchableOpacity
-              style={styles.logoutBtn}
+              style={
+                styles.logoutBtn
+              }
               onPress={logout}
             >
-              <Text style={styles.buttonText}>
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
                 Logout
               </Text>
             </TouchableOpacity>
-
           </View>
         ) : (
-          // ================= LOGGED OUT =================
           <>
-
-            <Text
-              style={{
-                color: "red",
-                marginBottom: 10,
-              }}
-            >
-              ❌ Not Logged In
-            </Text>
-
-            {/* USERNAME */}
             <TextInput
               placeholder="Username"
               value={username}
-              onChangeText={setUsername}
-              style={styles.input}
+              onChangeText={
+                setUsername
+              }
+              style={
+                styles.input
+              }
             />
 
-            {/* EMAIL */}
             <TextInput
               placeholder="Email"
               value={email}
-              onChangeText={setEmail}
-              style={styles.input}
+              onChangeText={
+                setEmail
+              }
+              style={
+                styles.input
+              }
             />
 
-            {/* PASSWORD */}
             <TextInput
               placeholder="Password"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={
+                setPassword
+              }
               secureTextEntry
-              style={styles.input}
+              style={
+                styles.input
+              }
             />
 
-            {/* SIGNUP */}
             <TouchableOpacity
-              style={styles.button}
+              style={
+                styles.button
+              }
               onPress={signUp}
             >
-              <Text style={styles.buttonText}>
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
                 Sign Up
               </Text>
             </TouchableOpacity>
 
-            {/* LOGIN */}
             <TouchableOpacity
-              style={styles.recordBtn}
+              style={
+                styles.recordBtn
+              }
               onPress={login}
             >
-              <Text style={styles.buttonText}>
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
                 Login
               </Text>
             </TouchableOpacity>
-
           </>
         )}
+      </View>
+
+      {/* ================= DATABASE CONTROL PANEL ================= */}
+
+      <View style={styles.databaseCard}>
+        <Text
+          style={
+            styles.databaseTitle
+          }
+        >
+          🗄 SQLite Database Control Panel
+        </Text>
+
+        <Text
+          style={
+            styles.databaseText
+          }
+        >
+          ✔ Save experiment data
+        </Text>
+
+        <Text
+          style={
+            styles.databaseText
+          }
+        >
+          ✔ Load stored records
+        </Text>
+
+        <Text
+          style={
+            styles.databaseText
+          }
+        >
+          ✔ Delete individual rows
+        </Text>
+
+        <Text
+          style={
+            styles.databaseText
+          }
+        >
+          ✔ Reset entire database
+        </Text>
+
+        <TouchableOpacity
+          style={
+            styles.restoreBtn
+          }
+          onPress={
+            restoreDatabase
+          }
+        >
+          <Text
+            style={
+              styles.buttonText
+            }
+          >
+            Restore / Reload Database
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={
+            styles.logoutBtn
+          }
+          onPress={
+            deleteAllExperiments
+          }
+        >
+          <Text
+            style={
+              styles.buttonText
+            }
+          >
+            Delete Entire Database
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* ================= TABS ================= */}
@@ -410,25 +695,34 @@ export default function App() {
             key={p.key}
             style={[
               styles.tab,
-              activeTab === p.key &&
+
+              activeTab ===
+                p.key &&
                 styles.activeTab,
             ]}
             onPress={() =>
-              setActiveTab(p.key)
+              setActiveTab(
+                p.key
+              )
             }
           >
-            <Text style={styles.tabText}>
+            <Text
+              style={
+                styles.tabText
+              }
+            >
               {p.label}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* ================= INPUT ================= */}
+      {/* ================= INPUT CARD ================= */}
 
       <View style={styles.card}>
-
-        <Text style={styles.label}>
+        <Text
+          style={styles.label}
+        >
           Time (s)
         </Text>
 
@@ -438,31 +732,47 @@ export default function App() {
           style={styles.input}
         />
 
-        <Text style={styles.label}>
+        <Text
+          style={styles.label}
+        >
           Height (m)
         </Text>
 
         <TextInput
           value={height}
-          onChangeText={setHeight}
+          onChangeText={
+            setHeight
+          }
           style={styles.input}
         />
 
-        <Text style={styles.label}>
+        <Text
+          style={styles.label}
+        >
           Mass (kg)
         </Text>
 
         <TextInput
           value={mass}
-          onChangeText={setMass}
+          onChangeText={
+            setMass
+          }
           style={styles.input}
         />
 
         <TouchableOpacity
-          style={styles.recordBtn}
-          onPress={fakeRecord}
+          style={
+            styles.recordBtn
+          }
+          onPress={
+            fakeRecord
+          }
         >
-          <Text style={styles.buttonText}>
+          <Text
+            style={
+              styles.buttonText
+            }
+          >
             {recorded
               ? "Recorded ✔"
               : "Record Experiment"}
@@ -471,47 +781,162 @@ export default function App() {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={addExperiment}
+          onPress={
+            addExperiment
+          }
         >
-          <Text style={styles.buttonText}>
-            Add Trial
+          <Text
+            style={
+              styles.buttonText
+            }
+          >
+            Save To SQLite Database
           </Text>
         </TouchableOpacity>
+      </View>
 
+      {/* ================= DATABASE RECORDS ================= */}
+
+      <View style={styles.card}>
+        <Text style={styles.title}>
+          📦 Stored Database Records
+        </Text>
+
+        {data[activeTab]
+          .length === 0 ? (
+          <Text>
+            No experiments stored.
+          </Text>
+        ) : (
+          data[activeTab].map(
+            (item: any) => (
+              <View
+                key={item.id}
+                style={
+                  styles.recordCard
+                }
+              >
+                <Text>
+                  Database ID:{" "}
+                  {item.id}
+                </Text>
+
+                <Text>
+                  Username:{" "}
+                  {
+                    item.username
+                  }
+                </Text>
+
+                <Text>
+                  Email:{" "}
+                  {
+                    item.userEmail
+                  }
+                </Text>
+
+                <Text>
+                  Prototype:{" "}
+                  {
+                    item.prototype
+                  }
+                </Text>
+
+                <Text>
+                  Time:{" "}
+                  {item.time}s
+                </Text>
+
+                <Text>
+                  Height:{" "}
+                  {item.height}m
+                </Text>
+
+                <Text>
+                  Mass:{" "}
+                  {item.mass}kg
+                </Text>
+
+                <Text>
+                  Created:{" "}
+                  {
+                    item.createdAt
+                  }
+                </Text>
+
+                <TouchableOpacity
+                  style={
+                    styles.logoutBtn
+                  }
+                  onPress={() =>
+                    deleteExperiment(
+                      item.id
+                    )
+                  }
+                >
+                  <Text
+                    style={
+                      styles.buttonText
+                    }
+                  >
+                    Delete This Record
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )
+          )
+        )}
       </View>
 
       {/* ================= GRAPH ================= */}
 
-      {data[activeTab].length > 0 && (
-        <View style={styles.card}>
-
-          <Text style={styles.title}>
+      {data[activeTab]
+        .length > 0 && (
+        <View
+          style={styles.card}
+        >
+          <Text
+            style={
+              styles.title
+            }
+          >
             📈 Trial Improvement
           </Text>
 
           <LineChart
             data={{
               labels:
-                data[activeTab].map(
-                  (_, i) => `T${i + 1}`
+                data[
+                  activeTab
+                ].map(
+                  (
+                    _: any,
+                    i: number
+                  ) =>
+                    `T${
+                      i + 1
+                    }`
                 ),
 
               datasets: [
                 {
                   data: getTimes(
-                    data[activeTab]
+                    data[
+                      activeTab
+                    ]
                   ),
                 },
               ],
             }}
-
-            width={screenWidth - 20}
-
+            width={
+              screenWidth -
+              20
+            }
             height={220}
-
-            chartConfig={chartConfig}
+            chartConfig={
+              chartConfig
+            }
           />
-
         </View>
       )}
     </ScrollView>
@@ -519,107 +944,211 @@ export default function App() {
 }
 
 const chartConfig = {
-  backgroundGradientFrom: "#fff",
+  backgroundGradientFrom:
+    "#fff",
 
-  backgroundGradientTo: "#fff",
+  backgroundGradientTo:
+    "#fff",
 
-  decimalPlaces: 6,
+  decimalPlaces: 3,
 
   color: () => "#4f46e5",
 };
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 10,
+      backgroundColor:
+        "#f5f5f5",
+    },
 
-  container: {
-    flex: 1,
-    padding: 10,
-  },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
 
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
+    card: {
+      backgroundColor:
+        "#fff",
 
-  card: {
-    backgroundColor: "#fff",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 8,
-  },
+      padding: 12,
 
-  input: {
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 6,
-  },
+      marginBottom: 10,
 
-  label: {
-    fontWeight: "600",
-  },
+      borderRadius: 10,
+    },
 
-  button: {
-    backgroundColor: "#4f46e5",
-    padding: 10,
-    marginTop: 5,
-  },
+    databaseCard: {
+      backgroundColor:
+        "#dbeafe",
 
-  recordBtn: {
-    backgroundColor: "#10b981",
-    padding: 10,
-    marginTop: 5,
-  },
+      padding: 15,
 
-  logoutBtn: {
-    backgroundColor: "#ef4444",
-    padding: 10,
-    marginTop: 10,
-  },
+      borderRadius: 10,
 
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-  },
+      marginBottom: 10,
 
-  tabs: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
+      borderWidth: 2,
 
-  tab: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: "#ccc",
-  },
+      borderColor:
+        "#2563eb",
+    },
 
-  activeTab: {
-    backgroundColor: "#4f46e5",
-  },
+    databaseTitle: {
+      fontSize: 18,
 
-  tabText: {
-    color: "#fff",
-    textAlign: "center",
-  },
+      fontWeight: "bold",
 
-  title: {
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
+      marginBottom: 10,
 
-  loggedInBox: {
-    backgroundColor: "#d1fae5",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
+      color: "#1e3a8a",
+    },
 
-  loggedInText: {
-    fontWeight: "bold",
-    color: "green",
-    marginBottom: 5,
-  },
+    databaseText: {
+      marginBottom: 6,
 
-  userText: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-});
+      fontSize: 15,
+    },
+
+    input: {
+      borderWidth: 1,
+
+      padding: 8,
+
+      marginBottom: 6,
+
+      borderRadius: 5,
+    },
+
+    label: {
+      fontWeight: "600",
+    },
+
+    button: {
+      backgroundColor:
+        "#4f46e5",
+
+      padding: 12,
+
+      marginTop: 5,
+
+      borderRadius: 5,
+    },
+
+    restoreBtn: {
+      backgroundColor:
+        "#0ea5e9",
+
+      padding: 12,
+
+      marginTop: 10,
+
+      borderRadius: 5,
+    },
+
+    recordBtn: {
+      backgroundColor:
+        "#10b981",
+
+      padding: 12,
+
+      marginTop: 5,
+
+      borderRadius: 5,
+    },
+
+    logoutBtn: {
+      backgroundColor:
+        "#ef4444",
+
+      padding: 12,
+
+      marginTop: 10,
+
+      borderRadius: 5,
+    },
+
+    buttonText: {
+      color: "#fff",
+
+      textAlign: "center",
+
+      fontWeight: "bold",
+    },
+
+    tabs: {
+      flexDirection: "row",
+
+      marginBottom: 10,
+    },
+
+    tab: {
+      flex: 1,
+
+      padding: 10,
+
+      backgroundColor:
+        "#ccc",
+    },
+
+    activeTab: {
+      backgroundColor:
+        "#4f46e5",
+    },
+
+    tabText: {
+      color: "#fff",
+
+      textAlign: "center",
+    },
+
+    title: {
+      fontWeight: "bold",
+
+      marginBottom: 10,
+
+      fontSize: 18,
+    },
+
+    loggedInBox: {
+      backgroundColor:
+        "#d1fae5",
+
+      padding: 10,
+
+      borderRadius: 8,
+    },
+
+    loggedInText: {
+      fontWeight: "bold",
+
+      color: "green",
+
+      marginBottom: 5,
+    },
+
+    userText: {
+      fontSize: 16,
+
+      marginBottom: 5,
+    },
+
+    recordCard: {
+      borderWidth: 1,
+
+      borderColor:
+        "#ddd",
+
+      borderRadius: 8,
+
+      padding: 10,
+
+      marginBottom: 10,
+
+      backgroundColor:
+        "#fafafa",
+    },
+  });
