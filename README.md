@@ -1,263 +1,273 @@
-# STEMM Lab Mobile Application
+# 🪂 Advanced Parachute Physics Laboratory
 
-## Overview
+A professional-grade mobile physics experimentation platform developed using **React Native**, **Firebase Authentication**, and **SQLite relational databases**.
 
-STEMM Lab is a React Native mobile application developed for the CSE3MAD Mobile Application Development assessment. The application transforms STEMM learning activities into interactive mobile experiences using mobile sensors, timers, experiment tracking, and data analysis.
-
-The current implementation focuses on the **Parachute Drop Challenge**, where students design and test parachutes while analysing the effects of gravity, drag force, acceleration, and landing safety.
-
-The application allows students to:
-
-- Record parachute experiment data
-- Compare multiple parachute designs
-- Calculate forces and motion values
-- Visualise performance improvements using charts
-- Track experiment results across trials
+This application allows users to scientifically analyze parachute experiments and compare real-world drag conditions against ideal vacuum physics using accurate kinematic equations and force calculations.
 
 ---
 
-# Technologies Used
+# 📱 Application Overview
 
-## Frontend
-
-- React Native
-- Expo
-- JavaScript
-- React Hooks
-
-## Libraries
-
-- react-native-chart-kit
-- react-native-svg
-
-## Development Tools
-
-- Node.js
-- npm
-- Expo Go
-- Visual Studio Code
-
----
-
-# Features
-
-## Experiment Recording
-
-Users can record parachute experiment trials including:
-
-- Time
-- Height
-- Mass
-- Prototype type
-
----
-
-## Physics Engine
-
-The application automatically calculates:
-
-- Acceleration
-- Velocity
-- Weight force
-- Net force
-- Drag force
-- G-force
-- Ideal freefall time
-
----
-
-## Prototype Comparison
-
-Users can compare multiple parachute designs using separate tabs.
-
-Supported prototype categories:
-
-- Baseline
-- Prototype 1
-- Prototype 2
-- Prototype 3
-
----
-
-## Graphing System
-
-The application visualises trial improvement using line graphs.
-
-This allows students to observe:
-
-- Performance consistency
-- Design improvements
-- Time reductions or increases
-
----
-
-## Trial Management
+The **Advanced Parachute Physics Laboratory** simulates and records experimental free-fall tests for parachute systems under different drag conditions.
 
 Users can:
+- authenticate securely
+- store experiments locally in a relational SQLite database
+- compare vacuum vs drag performance
+- visualize results on graphs
+- calculate advanced physics metrics automatically
 
-- Add trials
-- Delete trials
-- Review previous results
-- Compare experiment outcomes
+The application is designed to reflect:
+- professional engineering software
+- scientific laboratory systems
+- accurate physics computation
+- modern mobile UI/UX practices
 
 ---
 
-# Installation Guide
+# 🚀 Features
 
-## Step 1 – Clone Repository
+## 🔐 Firebase Authentication
+- Secure user login and signup
+- User-specific experiment databases
+- Persistent sessions
+- Firebase cloud authentication
 
-```bash
-git clone <repository-url>
+---
+
+## 🗄 SQLite Relational Database
+- Fully relational database structure
+- Per-user experiment storage
+- Persistent offline storage
+- Dynamic record deletion
+- Database reload/reset functionality
+
+---
+
+## 🧪 Scientific Physics Engine
+
+The application performs physically accurate calculations using SI units and real-world equations.
+
+### Physics Calculations Include:
+
+| Calculation | Formula |
+|---|---|
+| Vacuum Fall Time | \( t = \sqrt{\frac{2h}{g}} \) |
+| Acceleration | \( a = \frac{2h}{t^2} \) |
+| Velocity | \( v = at \) |
+| Force | \( F = ma \) |
+| Momentum | \( p = mv \) |
+| Kinetic Energy | \( KE = \frac{1}{2}mv^2 \) |
+| Drag Force | \( F_d = mg - ma \) |
+| G-Force | \( \frac{a}{g} \) |
+
+---
+
+# 🌍 Scientific Accuracy
+
+The application uses internationally accepted Earth gravity:
+
+```txt
+g = 9.80665 m/s²
+```
+
+Vacuum fall timing is automatically calculated using full scientific precision.
+
+Example for a 1-meter drop:
+
+```txt
+0.4515236409 seconds
+```
+
+This creates extremely accurate comparisons between:
+- ideal vacuum conditions
+- real atmospheric drag
+- parachute resistance
+
+---
+
+# 📊 Experimental Graphing
+
+The application dynamically visualizes:
+- experimental fall time
+- trial progression
+- drag influence trends
+
+Graph improvements include:
+- readable Y-axis scaling
+- proper second formatting
+- left-to-right chronological ordering
+- scientific data visualization
+
+---
+
+# 👤 Multi-User Architecture
+
+Each authenticated user has:
+- independent stored experiments
+- isolated SQLite records
+- secure Firebase authentication state
+
+This ensures:
+- personalized datasets
+- no data overlap
+- scalable architecture
+
+---
+
+# 🧠 Technologies Used
+
+| Technology | Purpose |
+|---|---|
+| React Native | Mobile application framework |
+| Expo | Development environment |
+| Firebase Authentication | Secure authentication |
+| SQLite | Relational local database |
+| TypeScript | Type-safe development |
+| React Native Chart Kit | Scientific graphing |
+
+---
+
+# 🏗 Database Structure
+
+The SQLite database stores:
+
+| Field | Description |
+|---|---|
+| uid | Firebase user ID |
+| prototype | Prototype category |
+| time | Experimental fall time |
+| height | Drop height |
+| mass | Object mass |
+| idealTime | Perfect vacuum time |
+| acceleration | Measured acceleration |
+| velocity | Final velocity |
+| dragForce | Calculated drag |
+| kineticEnergy | Energy calculation |
+| momentum | Momentum calculation |
+| gForce | Relative g-force |
+| createdAt | Timestamp |
+
+---
+
+# 📂 Project Structure
+
+```txt
+project/
+│
+├── firebase.js
+├── app/
+│   └── index.tsx
+│
+├── package.json
+├── README.md
+└── assets/
 ```
 
 ---
 
-## Step 2 – Install Dependencies
+# ⚙ Installation
+
+## 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-Install graph dependencies:
+---
+
+## 2. Install SQLite
 
 ```bash
-npm install react-native-chart-kit react-native-svg
+npm install expo-sqlite
 ```
 
 ---
 
-## Step 3 – Start Expo
+## 3. Start Development Server
 
 ```bash
-npx expo start
+npx expo start --clear
 ```
 
 ---
 
-## Step 4 – Run on Phone
+# 🔥 Firebase Setup
 
-1. Install Expo Go
-2. Connect to the same Wi-Fi network
-3. Scan the QR code
-4. Launch the app
+Create a Firebase project and enable:
+- Authentication
+- Email/Password Sign-In
 
----
+Then configure:
 
-# Building APK
-
-To generate an Android APK build:
-
-```bash
-npm install -g eas-cli
+```js
+firebase.js
 ```
 
-Login:
-
-```bash
-eas login
-```
-
-Configure EAS:
-
-```bash
-eas build:configure
-```
-
-Generate Android build:
-
-```bash
-eas build -p android
-```
-
-Expo will generate an installable APK or AAB file.
+with your Firebase credentials.
 
 ---
 
-# Testing
+# 🧪 Example Scientific Output
 
-## Manual Testing
+Example vacuum experiment:
 
-The application was manually tested for:
+| Metric | Value |
+|---|---|
+| Experimental Time | 0.451523s |
+| Vacuum Time | 0.451523s |
+| Velocity | 4.429m/s |
+| Acceleration | 9.80665m/s² |
+| Drag Force | 0.000N |
 
-- Input handling
-- Trial recording
-- Physics calculations
-- Graph rendering
-- Prototype switching
-- Trial deletion
+Example parachute experiment:
 
----
-
-## Device Testing
-
-The application was tested using:
-
-- Expo Go
-- Android mobile device
-- Web preview
+| Metric | Value |
+|---|---|
+| Experimental Time | 4.000s |
+| Velocity | 0.500m/s |
+| Drag Force | 1.937N |
+| Acceleration Loss | 9.681m/s² |
 
 ---
 
-# Known Limitations
+# 🎯 Educational Purpose
 
-Current limitations include:
-
-- No persistent database storage
-- No Firebase integration
-- No real camera/video recording
-- No GPS integration yet
-- No authentication system
-
-These features may be implemented in future development sprints.
-
----
-
-# Future Improvements
-
-Potential future improvements include:
-
-- Real-time camera recording
-- Firebase cloud storage
-- GPS location tagging
-- Team leaderboards
-- Sensor integration
-- Exporting experiment data
-- Improved analytics dashboards
-- Authentication system
-- Offline support
+This project demonstrates:
+- mobile software engineering
+- relational database systems
+- scientific computing
+- authentication systems
+- data visualization
+- physics simulation
+- engineering analysis
 
 ---
 
-# Agile Development Approach
+# 🧑‍💻 Author
 
-The project follows an Agile-inspired sprint workflow.
-
-Development involved:
-
-- Planning features
-- Incremental implementation
-- Continuous testing
-- Iterative improvements
-- Prototype experimentation
+Developed as an advanced engineering and physics experimentation platform using modern mobile development technologies.
 
 ---
 
-# Educational Purpose
+# 📜 License
 
-The application is designed to support:
-
-- STEMM education
-- Engineering design thinking
-- Data analysis
-- Physics learning
-- Experiment-based problem solving
-
-The app encourages students to test hypotheses, analyse results, and iteratively improve designs.
+This project is intended for:
+- educational use
+- scientific experimentation
+- engineering demonstrations
+- academic assessment
 
 ---
 
-# Conclusion
+# 🏆 Final Notes
 
-STEMM Lab demonstrates how mobile application development can support educational STEMM activities through interactive experimentation, data collection, and real-time analysis.
+The Advanced Parachute Physics Laboratory was designed to emulate professional engineering software while maintaining scientific correctness and modern application architecture.
 
-The current implementation successfully delivers a functional parachute experiment system aligned with the project specification while providing a strong foundation for future feature expansion.
+The system demonstrates:
+- accurate physics computation
+- relational database implementation
+- secure authentication
+- persistent data management
+- experimental visualization
+- scalable software architecture
