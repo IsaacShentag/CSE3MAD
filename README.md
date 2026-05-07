@@ -2,87 +2,203 @@
 
 A professional-grade mobile physics experimentation platform developed using **React Native**, **Firebase Authentication**, and **SQLite relational databases**.
 
-This application allows users to scientifically analyze parachute experiments and compare real-world drag conditions against ideal vacuum physics using accurate kinematic equations and force calculations.
+The application enables users to scientifically analyze parachute experiments and compare real-world atmospheric drag against ideal vacuum physics using accurate Newtonian mechanics and scientific computation.
 
 ---
 
 # 📱 Application Overview
 
-The **Advanced Parachute Physics Laboratory** simulates and records experimental free-fall tests for parachute systems under different drag conditions.
+The **Advanced Parachute Physics Laboratory** simulates and records free-fall experiments under different drag conditions.
 
-Users can:
-- authenticate securely
-- store experiments locally in a relational SQLite database
-- compare vacuum vs drag performance
-- visualize results on graphs
-- calculate advanced physics metrics automatically
+The system provides:
 
-The application is designed to reflect:
-- professional engineering software
+- Secure Firebase authentication
+- Per-user relational database storage
+- Scientific experiment recording
+- Real-time physics calculations
+- Vacuum vs drag comparison
+- Experimental graph visualization
+- Advanced SI-unit calculations
+
+The application was designed to emulate:
+- engineering software
 - scientific laboratory systems
-- accurate physics computation
-- modern mobile UI/UX practices
+- research-grade physics tools
+- modern mobile scientific interfaces
 
 ---
 
 # 🚀 Features
 
 ## 🔐 Firebase Authentication
-- Secure user login and signup
+
+- Secure login/signup
 - User-specific experiment databases
-- Persistent sessions
+- Persistent authentication sessions
 - Firebase cloud authentication
 
 ---
 
 ## 🗄 SQLite Relational Database
-- Fully relational database structure
-- Per-user experiment storage
-- Persistent offline storage
-- Dynamic record deletion
-- Database reload/reset functionality
+
+- Fully relational local database
+- Persistent offline experiment storage
+- Per-user isolated records
+- Dynamic experiment deletion
+- Full database reset/reload functionality
 
 ---
 
-## 🧪 Scientific Physics Engine
+# 🧪 Scientific Physics Engine
 
-The application performs physically accurate calculations using SI units and real-world equations.
+The application performs scientifically accurate calculations using classical Newtonian mechanics and SI units.
 
-### Physics Calculations Include:
+---
 
-| Calculation | Formula |
-|---|---|
-| Vacuum Fall Time | \( t = \sqrt{\frac{2h}{g}} \) |
-| Acceleration | \( a = \frac{2h}{t^2} \) |
-| Velocity | \( v = at \) |
-| Force | \( F = ma \) |
-| Momentum | \( p = mv \) |
-| Kinetic Energy | \( KE = \frac{1}{2}mv^2 \) |
-| Drag Force | \( F_d = mg - ma \) |
-| G-Force | \( \frac{a}{g} \) |
+## 📘 Perfect Vacuum Fall Time
+
+The ideal free-fall time in a vacuum is calculated using:
+
+$$
+t = \sqrt{\frac{2h}{g}}
+$$
+
+Where:
+
+- \( t \) = fall time (seconds)
+- \( h \) = height (meters)
+- \( g \) = gravitational acceleration
+
+---
+
+## 📘 Standard Gravity
+
+The application uses internationally accepted Earth gravity:
+
+$$
+g = 9.80665 \ \text{m/s}^2
+$$
+
+---
+
+## 📘 Acceleration
+
+Acceleration is derived from:
+
+$$
+a = \frac{2h}{t^2}
+$$
+
+Where:
+
+- \( a \) = acceleration
+- \( h \) = height
+- \( t \) = time
+
+---
+
+## 📘 Velocity
+
+Velocity is calculated using:
+
+$$
+v = at
+$$
+
+---
+
+## 📘 Newton's Second Law
+
+Net force acting on the object:
+
+$$
+F = ma
+$$
+
+---
+
+## 📘 Drag Force
+
+Atmospheric drag force is estimated using:
+
+$$
+F_d = mg - ma
+$$
+
+Where:
+
+- \( F_d \) = drag force
+- \( mg \) = gravitational force
+- \( ma \) = net force
+
+---
+
+## 📘 Momentum
+
+Momentum is calculated using:
+
+$$
+p = mv
+$$
+
+---
+
+## 📘 Kinetic Energy
+
+Kinetic energy is calculated using:
+
+$$
+KE = \frac{1}{2}mv^2
+$$
+
+---
+
+## 📘 Relative G-Force
+
+Relative gravitational force is calculated using:
+
+$$
+G = \frac{a}{g}
+$$
+
+---
+
+## 📘 Experimental Vacuum Difference
+
+The system automatically compares real-world fall time against theoretical vacuum timing:
+
+$$
+\Delta t = t_{experimental} - t_{vacuum}
+$$
+
+This enables direct scientific analysis of:
+- parachute drag
+- aerodynamic resistance
+- acceleration reduction
+- energy loss
+- force changes
 
 ---
 
 # 🌍 Scientific Accuracy
 
-The application uses internationally accepted Earth gravity:
+The application uses full scientific precision for all calculations.
 
-```txt
-g = 9.80665 m/s²
-```
+Example perfect vacuum fall for a 1-meter drop:
 
-Vacuum fall timing is automatically calculated using full scientific precision.
+$$
+t = \sqrt{\frac{2(1)}{9.80665}}
+$$
 
-Example for a 1-meter drop:
+$$
+t = 0.4515236409 \ \text{seconds}
+$$
 
-```txt
-0.4515236409 seconds
-```
-
-This creates extremely accurate comparisons between:
+This allows highly accurate comparison between:
 - ideal vacuum conditions
-- real atmospheric drag
-- parachute resistance
+- atmospheric drag
+- parachute performance
+- aerodynamic efficiency
 
 ---
 
@@ -90,21 +206,22 @@ This creates extremely accurate comparisons between:
 
 The application dynamically visualizes:
 - experimental fall time
+- drag influence
+- parachute performance trends
 - trial progression
-- drag influence trends
 
-Graph improvements include:
+Graph features include:
 - readable Y-axis scaling
-- proper second formatting
-- left-to-right chronological ordering
-- scientific data visualization
+- second-based scientific formatting
+- chronological left-to-right progression
+- professional scientific visualization
 
 ---
 
 # 👤 Multi-User Architecture
 
 Each authenticated user has:
-- independent stored experiments
+- independent experiment storage
 - isolated SQLite records
 - secure Firebase authentication state
 
@@ -120,9 +237,9 @@ This ensures:
 | Technology | Purpose |
 |---|---|
 | React Native | Mobile application framework |
-| Expo | Development environment |
+| Expo | Mobile development environment |
 | Firebase Authentication | Secure authentication |
-| SQLite | Relational local database |
+| SQLite | Relational database |
 | TypeScript | Type-safe development |
 | React Native Chart Kit | Scientific graphing |
 
@@ -195,6 +312,7 @@ npx expo start --clear
 # 🔥 Firebase Setup
 
 Create a Firebase project and enable:
+
 - Authentication
 - Email/Password Sign-In
 
@@ -210,24 +328,26 @@ with your Firebase credentials.
 
 # 🧪 Example Scientific Output
 
-Example vacuum experiment:
+## Perfect Vacuum Example
 
 | Metric | Value |
 |---|---|
-| Experimental Time | 0.451523s |
-| Vacuum Time | 0.451523s |
-| Velocity | 4.429m/s |
-| Acceleration | 9.80665m/s² |
-| Drag Force | 0.000N |
+| Experimental Time | 0.4515236409s |
+| Vacuum Time | 0.4515236409s |
+| Velocity | 4.429446918m/s |
+| Acceleration | 9.806650000m/s² |
+| Drag Force | 0.000000000N |
 
-Example parachute experiment:
+---
+
+## Parachute Example
 
 | Metric | Value |
 |---|---|
-| Experimental Time | 4.000s |
-| Velocity | 0.500m/s |
-| Drag Force | 1.937N |
-| Acceleration Loss | 9.681m/s² |
+| Experimental Time | 4.000000000s |
+| Velocity | 0.500000000m/s |
+| Drag Force | 1.937000000N |
+| Acceleration Loss | 9.681650000m/s² |
 
 ---
 
@@ -238,6 +358,7 @@ This project demonstrates:
 - relational database systems
 - scientific computing
 - authentication systems
+- experimental data analysis
 - data visualization
 - physics simulation
 - engineering analysis
@@ -246,7 +367,7 @@ This project demonstrates:
 
 # 🧑‍💻 Author
 
-Developed as an advanced engineering and physics experimentation platform using modern mobile development technologies.
+Developed as a professional engineering and scientific experimentation platform using modern mobile development technologies.
 
 ---
 
@@ -262,12 +383,13 @@ This project is intended for:
 
 # 🏆 Final Notes
 
-The Advanced Parachute Physics Laboratory was designed to emulate professional engineering software while maintaining scientific correctness and modern application architecture.
+The Advanced Parachute Physics Laboratory was designed to emulate professional engineering software while maintaining scientific correctness and modern mobile application architecture.
 
 The system demonstrates:
 - accurate physics computation
+- scientific precision
 - relational database implementation
 - secure authentication
 - persistent data management
 - experimental visualization
-- scalable software architecture
+- scalable software engineering principles
