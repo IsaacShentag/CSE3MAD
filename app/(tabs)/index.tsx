@@ -1,31 +1,38 @@
 // =========================================================
 // ADVANCED PARACHUTE PHYSICS LAB
-// FINAL PROFESSIONAL VERSION
+// ULTIMATE PROFESSIONAL FINAL VERSION
 // =========================================================
 //
 // FEATURES
 // ✔ Firebase Authentication
 // ✔ SQLite Relational Database
+// ✔ Load / Store / Delete Database
 // ✔ User-specific experiment storage
-// ✔ Scientifically accurate vacuum calculations
-// ✔ Automatic vacuum baseline timing
-// ✔ Accurate acceleration calculations
-// ✔ Accurate velocity calculations
-// ✔ Accurate drag force calculations
-// ✔ Accurate momentum calculations
-// ✔ Accurate kinetic energy calculations
-// ✔ Accurate force calculations
-// ✔ Reload/reset database
-// ✔ Professional graph scaling
-// ✔ Human-readable graph axis
-// ✔ Left-to-right experiment timeline
-// ✔ Scientific SI units
+// ✔ Scientific Physics Engine
+// ✔ Perfect Vacuum Physics
+// ✔ Vacuum vs Drag Comparison
+// ✔ Experiment Graphing
+// ✔ Accelerometer
+// ✔ Gyroscope
+// ✔ GPS Location
+// ✔ Battery Monitoring
+// ✔ Professional Sensor Dashboard
+// ✔ Scientific SI Units
+// ✔ Advanced Engineering UI
 //
 // =========================================================
 // INSTALL
 // =========================================================
 //
 // npm install expo-sqlite
+//
+// npx expo install expo-sensors
+//
+// npx expo install expo-location
+//
+// npx expo install expo-battery
+//
+// npm install react-native-chart-kit react-native-svg
 //
 // THEN:
 //
@@ -49,9 +56,22 @@ import {
   Alert,
 } from "react-native";
 
-import { LineChart } from "react-native-chart-kit";
+import {
+  LineChart,
+} from "react-native-chart-kit";
 
 import * as SQLite from "expo-sqlite";
+
+import {
+  Accelerometer,
+  Gyroscope,
+} from "expo-sensors";
+
+import {
+  getBatteryLevelAsync,
+} from "expo-battery";
+
+import * as Location from "expo-location";
 
 // =========================================================
 // FIREBASE AUTH
@@ -82,23 +102,16 @@ const screenWidth =
 // SCIENTIFIC CONSTANTS
 // =========================================================
 
-// Standard gravity
-
 const GRAVITY = 9.80665;
 
-// Air density at sea level
-
 const AIR_DENSITY = 1.225;
-
-// Default experiment setup
 
 const DEFAULT_HEIGHT = 1;
 
 const DEFAULT_MASS = 0.2;
 
 // =========================================================
-// PERFECT VACUUM FALL TIME
-// t = sqrt(2h/g)
+// PERFECT VACUUM TIME
 // =========================================================
 
 const getIdealVacuumTime = (
@@ -109,7 +122,7 @@ const getIdealVacuumTime = (
   );
 
 // =========================================================
-// PROTOTYPES
+// TABS
 // =========================================================
 
 const PROTOTYPES = [
@@ -132,6 +145,11 @@ const PROTOTYPES = [
     key: "p3",
     label: "Prototype 3",
   },
+
+  {
+    key: "sensors",
+    label: "Sensors",
+  },
 ];
 
 export default function App() {
@@ -153,24 +171,48 @@ export default function App() {
     useState<any>(null);
 
   // =========================================================
-  // UI
+  // ACTIVE TAB
   // =========================================================
 
   const [activeTab, setActiveTab] =
     useState("baseline");
 
   // =========================================================
-  // DEFAULT PERFECT VACUUM TIME
+  // SENSOR STATES
+  // =========================================================
+
+  const [accelerometerData,
+    setAccelerometerData] =
+    useState<any>({
+      x: 0,
+      y: 0,
+      z: 0,
+    });
+
+  const [gyroscopeData,
+    setGyroscopeData] =
+    useState<any>({
+      x: 0,
+      y: 0,
+      z: 0,
+    });
+
+  const [batteryLevel,
+    setBatteryLevel] =
+    useState(0);
+
+  const [locationData,
+    setLocationData] =
+    useState<any>(null);
+
+  // =========================================================
+  // INPUTS
   // =========================================================
 
   const defaultVacuumTime =
     getIdealVacuumTime(
       DEFAULT_HEIGHT
     ).toString();
-
-  // =========================================================
-  // INPUTS
-  // =========================================================
 
   const [time, setTime] =
     useState(defaultVacuumTime);
@@ -185,7 +227,8 @@ export default function App() {
       String(DEFAULT_MASS)
     );
 
-  const [recorded, setRecorded] =
+  const [recorded,
+    setRecorded] =
     useState(false);
 
   // =========================================================
@@ -201,7 +244,93 @@ export default function App() {
     });
 
   // =========================================================
-  // ALWAYS RESET TO PERFECT VACUUM TIME
+  // SENSOR SYSTEM
+  // =========================================================
+
+  useEffect(() => {
+
+    let accelerometerSubscription: any;
+
+    let gyroscopeSubscription: any;
+
+    const startSensors =
+      async () => {
+
+      // BATTERY
+
+      const battery =
+        await getBatteryLevelAsync();
+
+      setBatteryLevel(
+        battery * 100
+      );
+
+      // GPS
+
+      const permission =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (
+        permission.status ===
+        "granted"
+      ) {
+
+        const currentLocation =
+          await Location.getCurrentPositionAsync(
+            {}
+          );
+
+        setLocationData(
+          currentLocation.coords
+        );
+      }
+
+      // ACCELEROMETER
+
+      Accelerometer.setUpdateInterval(
+        300
+      );
+
+      accelerometerSubscription =
+        Accelerometer.addListener(
+          (data) => {
+
+            setAccelerometerData(
+              data
+            );
+          }
+        );
+
+      // GYROSCOPE
+
+      Gyroscope.setUpdateInterval(
+        300
+      );
+
+      gyroscopeSubscription =
+        Gyroscope.addListener(
+          (data) => {
+
+            setGyroscopeData(
+              data
+            );
+          }
+        );
+    };
+
+    startSensors();
+
+    return () => {
+
+      accelerometerSubscription?.remove();
+
+      gyroscopeSubscription?.remove();
+    };
+
+  }, []);
+
+  // =========================================================
+  // AUTO PERFECT VACUUM TIME
   // =========================================================
 
   useEffect(() => {
@@ -236,13 +365,6 @@ export default function App() {
     async () => {
 
       try {
-
-        // FULL RESET
-        // FIXES OLD UID ERRORS
-
-        await db.execAsync(`
-          DROP TABLE IF EXISTS experiments;
-        `);
 
         await db.execAsync(`
           CREATE TABLE IF NOT EXISTS experiments (
@@ -292,10 +414,6 @@ export default function App() {
           );
         `);
 
-        console.log(
-          "DATABASE INITIALIZED"
-        );
-
       } catch (error) {
 
         console.log(error);
@@ -304,7 +422,7 @@ export default function App() {
     };
 
   // =========================================================
-  // FIREBASE AUTH LISTENER
+  // AUTH LISTENER
   // =========================================================
 
   useEffect(() => {
@@ -325,7 +443,6 @@ export default function App() {
           } else {
 
             clearLocalData();
-
           }
         }
       );
@@ -350,7 +467,7 @@ export default function App() {
   };
 
   // =========================================================
-  // LOAD USER DATABASE
+  // LOAD DATABASE
   // =========================================================
 
   const loadExperiments =
@@ -465,13 +582,16 @@ export default function App() {
   };
 
   // =========================================================
-  // RECORD BUTTON
+  // RECORD
   // =========================================================
 
   const fakeRecord = () => {
 
     setRecorded(true);
 
+    alert(
+      "Experiment recording enabled"
+    );
   };
 
   // =========================================================
@@ -484,49 +604,31 @@ export default function App() {
     m: number
   ) => {
 
-    // PERFECT VACUUM TIME
-
     const idealTime =
       getIdealVacuumTime(h);
-
-    // ACCELERATION
 
     const acceleration =
       (2 * h) /
       (t * t);
 
-    // VELOCITY
-
     const velocity =
       acceleration * t;
-
-    // WEIGHT FORCE
 
     const weight =
       m * GRAVITY;
 
-    // NET FORCE
-
     const netForce =
       m * acceleration;
 
-    // DRAG FORCE
-
     const dragForce =
       weight - netForce;
-
-    // ACCELERATION LOSS
 
     const accelerationLoss =
       GRAVITY -
       acceleration;
 
-    // MOMENTUM
-
     const momentum =
       m * velocity;
-
-    // KINETIC ENERGY
 
     const kineticEnergy =
       0.5 *
@@ -534,18 +636,12 @@ export default function App() {
       velocity *
       velocity;
 
-    // VACUUM DIFFERENCE
-
     const timeDifference =
       t - idealTime;
-
-    // G FORCE
 
     const gForce =
       acceleration /
       GRAVITY;
-
-    // DRAG COEFFICIENT
 
     const dragCoefficient =
       dragForce /
@@ -610,19 +706,6 @@ export default function App() {
 
       const m =
         parseFloat(mass);
-
-      if (
-        isNaN(t) ||
-        isNaN(h) ||
-        isNaN(m)
-      ) {
-
-        alert(
-          "Invalid values"
-        );
-
-        return;
-      }
 
       const physics =
         calculatePhysics(
@@ -729,10 +812,8 @@ export default function App() {
       );
 
       alert(
-        "Experiment saved successfully"
+        "Experiment saved into SQLite database"
       );
-
-      // RESET TO PERFECT VACUUM TIME
 
       const resetTime =
         getIdealVacuumTime(
@@ -781,15 +862,18 @@ export default function App() {
     };
 
   // =========================================================
-  // RESET DATABASE
+  // DELETE DATABASE
   // =========================================================
 
-  const deleteAllExperiments =
-    () => {
+  const deleteDatabase =
+    async () => {
+
+      if (!user) return;
 
       Alert.alert(
         "Delete Database",
-        "Delete all records?",
+        "Delete ALL experiments?",
+
         [
 
           {
@@ -819,7 +903,7 @@ export default function App() {
                 );
 
                 alert(
-                  "Database reset complete"
+                  "Database deleted"
                 );
               },
           },
@@ -828,22 +912,30 @@ export default function App() {
     };
 
   // =========================================================
-  // RELOAD DATABASE
+  // GRAPH DATA
   // =========================================================
 
-  const restoreDatabase =
-    async () => {
+  const getGraphData = () => {
 
-      if (!user) return;
-
-      await loadExperiments(
-        user.uid
+    return data[activeTab]
+      ?.map((item: any) =>
+        Number(
+          item.time.toFixed(3)
+        )
       );
+  };
 
-      alert(
-        "Database reloaded"
+  const getGraphLabels = () => {
+
+    return data[activeTab]
+      ?.map(
+        (
+          _: any,
+          index: number
+        ) =>
+          `T${index + 1}`
       );
-    };
+  };
 
   // =========================================================
   // AVERAGE VELOCITY
@@ -870,32 +962,6 @@ export default function App() {
     };
 
   // =========================================================
-  // GRAPH DATA
-  // =========================================================
-
-  const getGraphData = () => {
-
-    return data[activeTab]
-      .map((item: any) =>
-        Number(
-          item.time.toFixed(3)
-        )
-      );
-  };
-
-  const getGraphLabels = () => {
-
-    return data[activeTab]
-      .map(
-        (
-          _: any,
-          index: number
-        ) =>
-          `T${index + 1}`
-      );
-  };
-
-  // =========================================================
   // UI
   // =========================================================
 
@@ -904,8 +970,6 @@ export default function App() {
     <ScrollView
       style={styles.container}
     >
-
-      {/* HEADER */}
 
       <Text style={styles.header}>
         🪂 Advanced Parachute Physics Laboratory
@@ -936,8 +1000,6 @@ export default function App() {
             </Text>
 
             <Text>
-              User:
-              {" "}
               {user.email}
             </Text>
 
@@ -947,6 +1009,7 @@ export default function App() {
               }
               onPress={logout}
             >
+
               <Text
                 style={
                   styles.buttonText
@@ -954,6 +1017,7 @@ export default function App() {
               >
                 Logout
               </Text>
+
             </TouchableOpacity>
 
           </View>
@@ -961,7 +1025,6 @@ export default function App() {
         ) : (
 
           <>
-
             <TextInput
               placeholder="Username"
               value={username}
@@ -1002,6 +1065,7 @@ export default function App() {
               }
               onPress={signUp}
             >
+
               <Text
                 style={
                   styles.buttonText
@@ -1009,6 +1073,7 @@ export default function App() {
               >
                 Sign Up
               </Text>
+
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1017,6 +1082,7 @@ export default function App() {
               }
               onPress={login}
             >
+
               <Text
                 style={
                   styles.buttonText
@@ -1024,63 +1090,72 @@ export default function App() {
               >
                 Login
               </Text>
-            </TouchableOpacity>
 
+            </TouchableOpacity>
           </>
         )}
       </View>
 
-      {/* DATABASE */}
+      {/* DATABASE CONTROLS */}
 
-      <View
-        style={
-          styles.databaseCard
-        }
-      >
+      {user && (
 
-        <Text
-          style={
-            styles.databaseTitle
-          }
-        >
-          🗄 SQLite Database
-        </Text>
+        <View style={styles.card}>
 
-        <TouchableOpacity
-          style={
-            styles.restoreBtn
-          }
-          onPress={
-            restoreDatabase
-          }
-        >
-          <Text
-            style={
-              styles.buttonText
+          <Text style={styles.title}>
+            🗄 Database Control Center
+          </Text>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={async () => {
+
+              await loadExperiments(
+                user.uid
+              );
+
+              alert(
+                "Database loaded"
+              );
+            }}
+          >
+
+            <Text style={styles.buttonText}>
+              📂 Load Database
+            </Text>
+
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.recordBtn}
+            onPress={() =>
+              alert(
+                "Experiments are automatically stored into SQLite database."
+              )
             }
           >
-            Reload Database
-          </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={
-            styles.logoutBtn
-          }
-          onPress={
-            deleteAllExperiments
-          }
-        >
-          <Text
-            style={
-              styles.buttonText
+            <Text style={styles.buttonText}>
+              💾 Store Database
+            </Text>
+
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={
+              deleteDatabase
             }
           >
-            Reset Database
-          </Text>
-        </TouchableOpacity>
 
-      </View>
+            <Text style={styles.buttonText}>
+              🗑 Delete Database
+            </Text>
+
+          </TouchableOpacity>
+
+        </View>
+      )}
 
       {/* TABS */}
 
@@ -1117,318 +1192,364 @@ export default function App() {
         ))}
       </View>
 
-      {/* INPUTS */}
+      {/* SENSOR DASHBOARD */}
 
-      <View style={styles.card}>
+      {activeTab === "sensors" && (
 
-        <Text style={styles.label}>
-          Time (s)
-        </Text>
+        <View style={styles.sensorCard}>
 
-        <TextInput
-          value={time}
-          onChangeText={setTime}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>
-          Height (m)
-        </Text>
-
-        <TextInput
-          value={height}
-          onChangeText={
-            setHeight
-          }
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>
-          Mass (kg)
-        </Text>
-
-        <TextInput
-          value={mass}
-          onChangeText={
-            setMass
-          }
-          style={styles.input}
-        />
-
-        <TouchableOpacity
-          style={
-            styles.recordBtn
-          }
-          onPress={
-            fakeRecord
-          }
-        >
-          <Text
-            style={
-              styles.buttonText
-            }
-          >
-            {recorded
-              ? "Recorded ✔"
-              : "Record Experiment"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={
-            addExperiment
-          }
-        >
-          <Text
-            style={
-              styles.buttonText
-            }
-          >
-            Save Experiment
-          </Text>
-        </TouchableOpacity>
-
-      </View>
-
-      {/* STORED RECORDS */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.title}>
-          📦 Stored Records
-        </Text>
-
-        <Text
-          style={
-            styles.averageText
-          }
-        >
-          Average Velocity:
-          {" "}
-          {getAverageVelocity(
-            data[activeTab]
-          ).toFixed(6)}
-          {" "}
-          m/s
-        </Text>
-
-        {data[activeTab]
-          .length === 0 ? (
-
-          <Text>
-            No records stored.
+          <Text style={styles.sensorTitle}>
+            📡 Live Sensor Dashboard
           </Text>
 
-        ) : (
+          <View style={styles.sensorBox}>
 
-          data[activeTab].map(
-            (item: any) => (
+            <Text style={styles.sensorText}>
+              🔋 Battery:
+              {" "}
+              {batteryLevel.toFixed(0)}
+              %
+            </Text>
 
-              <View
-                key={item.id}
-                style={
-                  styles.recordCard
-                }
-              >
+          </View>
 
-                <Text
-                  style={
-                    styles.recordTitle
-                  }
-                >
-                  🧪 Experiment #{item.id}
+          <View style={styles.sensorBox}>
+
+            <Text style={styles.sensorText}>
+              🌍 GPS Coordinates
+            </Text>
+
+            {locationData && (
+
+              <>
+                <Text>
+                  Latitude:
+                  {" "}
+                  {locationData.latitude.toFixed(5)}
                 </Text>
 
                 <Text>
-                  ⏱ Experimental Time:
+                  Longitude:
                   {" "}
-                  {Number(item.time).toFixed(6)}
-                  s
+                  {locationData.longitude.toFixed(5)}
                 </Text>
+              </>
+            )}
 
-                <Text>
-                  🌌 Perfect Vacuum Time:
-                  {" "}
-                  {Number(item.idealTime).toFixed(6)}
-                  s
-                </Text>
+          </View>
 
-                <Text>
-                  🕒 Vacuum Difference:
-                  {" "}
-                  {Number(item.timeDifference).toFixed(6)}
-                  s
-                </Text>
+          <View style={styles.sensorBox}>
 
-                <Text>
-                  🚀 Velocity:
-                  {" "}
-                  {Number(item.velocity).toFixed(6)}
-                  m/s
-                </Text>
+            <Text style={styles.sensorText}>
+              📈 Accelerometer
+            </Text>
 
-                <Text>
-                  📉 Acceleration:
-                  {" "}
-                  {Number(item.acceleration).toFixed(6)}
-                  m/s²
-                </Text>
+            <Text>
+              X:
+              {" "}
+              {accelerometerData.x.toFixed(3)}
+            </Text>
 
-                <Text>
-                  🌬 Drag Force:
-                  {" "}
-                  {Number(item.dragForce).toFixed(6)}
-                  N
-                </Text>
+            <Text>
+              Y:
+              {" "}
+              {accelerometerData.y.toFixed(3)}
+            </Text>
 
-                <Text>
-                  📊 Acceleration Loss:
-                  {" "}
-                  {Number(item.accelerationLoss).toFixed(6)}
-                  m/s²
-                </Text>
+            <Text>
+              Z:
+              {" "}
+              {accelerometerData.z.toFixed(3)}
+            </Text>
 
-                <Text>
-                  ⚡ Kinetic Energy:
-                  {" "}
-                  {Number(item.kineticEnergy).toFixed(6)}
-                  J
-                </Text>
+          </View>
 
-                <Text>
-                  📦 Momentum:
-                  {" "}
-                  {Number(item.momentum).toFixed(6)}
-                  kg·m/s
-                </Text>
+          <View style={styles.sensorBox}>
 
-                <Text>
-                  🧲 G-Force:
-                  {" "}
-                  {Number(item.gForce).toFixed(6)}
-                  g
-                </Text>
+            <Text style={styles.sensorText}>
+              🌀 Gyroscope
+            </Text>
 
-                <Text>
-                  🪂 Drag Coefficient:
-                  {" "}
-                  {Number(item.dragCoefficient).toFixed(6)}
-                </Text>
+            <Text>
+              X:
+              {" "}
+              {gyroscopeData.x.toFixed(3)}
+            </Text>
 
-                <TouchableOpacity
-                  style={
-                    styles.logoutBtn
-                  }
-                  onPress={() =>
-                    deleteExperiment(
-                      item.id
-                    )
-                  }
-                >
+            <Text>
+              Y:
+              {" "}
+              {gyroscopeData.y.toFixed(3)}
+            </Text>
 
-                  <Text
-                    style={
-                      styles.buttonText
-                    }
-                  >
-                    Delete Record
-                  </Text>
+            <Text>
+              Z:
+              {" "}
+              {gyroscopeData.z.toFixed(3)}
+            </Text>
 
-                </TouchableOpacity>
-
-              </View>
-            )
-          )
-        )}
-      </View>
-
-      {/* GRAPH */}
-
-      {data[activeTab]
-        .length > 0 && (
-
-        <View
-          style={styles.card}
-        >
-
-          <Text
-            style={
-              styles.title
-            }
-          >
-            📈 Experimental Fall Time Graph
-          </Text>
-
-          <Text
-            style={{
-              marginBottom: 10,
-              color: "#555",
-            }}
-          >
-            Y-axis = Fall Time (seconds)
-          </Text>
-
-          <LineChart
-
-            data={{
-
-              labels:
-                getGraphLabels(),
-
-              datasets: [
-                {
-                  data:
-                    getGraphData(),
-                },
-              ],
-            }}
-
-            width={
-              screenWidth - 20
-            }
-
-            height={260}
-
-            yAxisSuffix="s"
-
-            fromZero={true}
-
-            segments={5}
-
-            chartConfig={{
-
-              backgroundGradientFrom:
-                "#ffffff",
-
-              backgroundGradientTo:
-                "#ffffff",
-
-              decimalPlaces: 2,
-
-              color: () => "#4f46e5",
-
-              labelColor: () =>
-                "#111827",
-
-              propsForDots: {
-
-                r: "5",
-
-                strokeWidth: "2",
-
-                stroke: "#4f46e5",
-              },
-            }}
-
-            bezier
-
-            style={{
-              borderRadius: 12,
-            }}
-          />
+          </View>
 
         </View>
+      )}
+
+      {/* EXPERIMENTS */}
+
+      {activeTab !== "sensors" && (
+
+        <>
+          <View style={styles.card}>
+
+            <Text style={styles.label}>
+              Time (s)
+            </Text>
+
+            <TextInput
+              value={time}
+              onChangeText={setTime}
+              style={styles.input}
+            />
+
+            <Text style={styles.label}>
+              Height (m)
+            </Text>
+
+            <TextInput
+              value={height}
+              onChangeText={
+                setHeight
+              }
+              style={styles.input}
+            />
+
+            <Text style={styles.label}>
+              Mass (kg)
+            </Text>
+
+            <TextInput
+              value={mass}
+              onChangeText={
+                setMass
+              }
+              style={styles.input}
+            />
+
+            <TouchableOpacity
+              style={
+                styles.recordBtn
+              }
+              onPress={
+                fakeRecord
+              }
+            >
+
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
+                {recorded
+                  ? "Recorded ✔"
+                  : "Record Experiment"}
+              </Text>
+
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={
+                addExperiment
+              }
+            >
+
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
+                Save Experiment
+              </Text>
+
+            </TouchableOpacity>
+
+          </View>
+
+          {/* RECORDS */}
+
+          <View style={styles.card}>
+
+            <Text style={styles.title}>
+              📦 Stored Records
+            </Text>
+
+            <Text
+              style={
+                styles.averageText
+              }
+            >
+              Average Velocity:
+              {" "}
+              {getAverageVelocity(
+                data[activeTab]
+              ).toFixed(6)}
+              {" "}
+              m/s
+            </Text>
+
+            {data[activeTab]
+              ?.map(
+                (
+                  item: any
+                ) => (
+
+                  <View
+                    key={item.id}
+                    style={
+                      styles.recordCard
+                    }
+                  >
+
+                    <Text
+                      style={
+                        styles.recordTitle
+                      }
+                    >
+                      🧪 Experiment #{item.id}
+                    </Text>
+
+                    <Text>
+                      ⏱ Time:
+                      {" "}
+                      {Number(item.time).toFixed(6)}
+                      s
+                    </Text>
+
+                    <Text>
+                      🌌 Vacuum:
+                      {" "}
+                      {Number(item.idealTime).toFixed(6)}
+                      s
+                    </Text>
+
+                    <Text>
+                      🚀 Velocity:
+                      {" "}
+                      {Number(item.velocity).toFixed(6)}
+                      m/s
+                    </Text>
+
+                    <Text>
+                      📉 Acceleration:
+                      {" "}
+                      {Number(item.acceleration).toFixed(6)}
+                      m/s²
+                    </Text>
+
+                    <Text>
+                      🌬 Drag Force:
+                      {" "}
+                      {Number(item.dragForce).toFixed(6)}
+                      N
+                    </Text>
+
+                    <TouchableOpacity
+                      style={
+                        styles.logoutBtn
+                      }
+                      onPress={() =>
+                        deleteExperiment(
+                          item.id
+                        )
+                      }
+                    >
+
+                      <Text
+                        style={
+                          styles.buttonText
+                        }
+                      >
+                        Delete Record
+                      </Text>
+
+                    </TouchableOpacity>
+
+                  </View>
+                )
+              )}
+          </View>
+
+          {/* GRAPH */}
+
+          {data[activeTab]
+            ?.length > 0 && (
+
+            <View
+              style={
+                styles.card
+              }
+            >
+
+              <Text
+                style={
+                  styles.title
+                }
+              >
+                📈 Experimental Graph
+              </Text>
+
+              <LineChart
+                data={{
+
+                  labels:
+                    getGraphLabels(),
+
+                  datasets: [
+                    {
+                      data:
+                        getGraphData(),
+                    },
+                  ],
+                }}
+
+                width={
+                  screenWidth - 20
+                }
+
+                height={260}
+
+                yAxisSuffix="s"
+
+                fromZero={true}
+
+                segments={5}
+
+                chartConfig={{
+
+                  backgroundGradientFrom:
+                    "#ffffff",
+
+                  backgroundGradientTo:
+                    "#ffffff",
+
+                  decimalPlaces: 2,
+
+                  color: () =>
+                    "#4f46e5",
+
+                  labelColor: () =>
+                    "#111827",
+                }}
+
+                bezier
+
+                style={{
+                  borderRadius: 12,
+                }}
+              />
+
+            </View>
+          )}
+        </>
       )}
     </ScrollView>
   );
@@ -1462,20 +1583,6 @@ const styles =
       borderRadius: 12,
     },
 
-    databaseCard: {
-      backgroundColor:
-        "#dbeafe",
-      padding: 14,
-      borderRadius: 12,
-      marginBottom: 12,
-    },
-
-    databaseTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      marginBottom: 10,
-    },
-
     input: {
       borderWidth: 1,
       padding: 10,
@@ -1498,14 +1605,6 @@ const styles =
     recordBtn: {
       backgroundColor:
         "#10b981",
-      padding: 14,
-      marginTop: 8,
-      borderRadius: 8,
-    },
-
-    restoreBtn: {
-      backgroundColor:
-        "#0ea5e9",
       padding: 14,
       marginTop: 8,
       borderRadius: 8,
@@ -1585,5 +1684,45 @@ const styles =
       fontWeight: "bold",
       marginBottom: 10,
       color: "#1d4ed8",
+    },
+
+    sensorCard: {
+
+      backgroundColor:
+        "#ede9fe",
+
+      padding: 14,
+
+      borderRadius: 12,
+
+      marginBottom: 12,
+    },
+
+    sensorTitle: {
+
+      fontSize: 20,
+
+      fontWeight: "bold",
+
+      marginBottom: 10,
+    },
+
+    sensorBox: {
+
+      backgroundColor:
+        "#ffffff",
+
+      padding: 10,
+
+      borderRadius: 10,
+
+      marginBottom: 10,
+    },
+
+    sensorText: {
+
+      fontWeight: "bold",
+
+      marginBottom: 4,
     },
   });
