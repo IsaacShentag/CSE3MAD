@@ -1,63 +1,144 @@
-# 🪂 Advanced Parachute Physics Laboratory
+# 🌍 STEMM Lab — Advanced Mobile Scientific Experimentation Platform
 
-A professional-grade mobile physics experimentation platform developed using **React Native**, **Firebase Authentication**, and **SQLite relational databases**.
+<p align="center">
 
-The application enables users to scientifically analyze parachute experiments and compare real-world atmospheric drag against ideal vacuum physics using accurate Newtonian mechanics and scientific computation.
+![React Native](https://img.shields.io/badge/React%20Native-Mobile-blue)
+![Expo](https://img.shields.io/badge/Expo-STEMM%20Platform-black)
+![Firebase](https://img.shields.io/badge/Firebase-Authentication-orange)
+![SQLite](https://img.shields.io/badge/SQLite-Scientific%20Database-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-Type%20Safe-blue)
+![Status](https://img.shields.io/badge/Status-Professional-success)
+
+</p>
 
 ---
 
-# 📱 Application Overview
+# 🧪 Overview
 
-The **Advanced Parachute Physics Laboratory** simulates and records free-fall experiments under different drag conditions.
+**STEMM Lab** is a professional-grade mobile scientific experimentation platform developed using:
 
-The system provides:
+- React Native
+- Expo
+- Firebase Authentication
+- SQLite Relational Databases
+- Real-Time Sensor Analytics
+- Scientific Data Visualization
 
-- Secure Firebase authentication
-- Per-user relational database storage
-- Scientific experiment recording
-- Real-time physics calculations
-- Vacuum vs drag comparison
-- Experimental graph visualization
-- Advanced SI-unit calculations
+The application transforms mobile devices into portable STEMM laboratories capable of performing:
 
-The application was designed to emulate:
-- engineering software
+- Physics experimentation
+- Environmental analysis
+- Human performance tracking
+- Sensor-based scientific investigations
+- Real-time scientific graphing
+- Experimental data storage and analysis
+
+The platform was designed to emulate:
+
+- professional engineering software
 - scientific laboratory systems
-- research-grade physics tools
-- modern mobile scientific interfaces
+- mobile field-research tools
+- educational STEMM platforms
+- real-world data acquisition systems
 
 ---
 
-# 🚀 Features
+# 🚀 Core Features
 
-## 🔐 Firebase Authentication
+# 🔐 Firebase Authentication
 
-- Secure login/signup
-- User-specific experiment databases
+- Secure user login/signup
 - Persistent authentication sessions
-- Firebase cloud authentication
+- User-isolated experiment storage
+- Cloud-based identity management
 
 ---
 
-## 🗄 SQLite Relational Database
+# 🗄 SQLite Scientific Database
 
-- Fully relational local database
-- Persistent offline experiment storage
-- Per-user isolated records
+- Relational experiment storage
+- Offline scientific data persistence
+- Experimental history tracking
+- User-specific datasets
 - Dynamic experiment deletion
-- Full database reset/reload functionality
+- Persistent scientific records
 
 ---
 
-# 🧪 Scientific Physics Engine
+# 📊 Scientific Data Visualization
 
-The application performs scientifically accurate calculations using classical Newtonian mechanics and SI units.
+The application dynamically generates:
+
+- scientific graphs
+- experimental trend analysis
+- live environmental readings
+- comparative experiment results
+- performance analytics
+
+Built using:
+
+- React Native Chart Kit
+- Dynamic SI-unit formatting
+- Professional graph rendering
 
 ---
 
-## 📘 Perfect Vacuum Fall Time
+# 🌍 GPS Scientific Location Tracking
 
-The ideal free-fall time in a vacuum is calculated using:
+The application integrates:
+
+- real-world location capture
+- environmental tagging
+- geographic scientific analysis
+
+Used for:
+- environmental science
+- field experimentation
+- location-aware datasets
+
+---
+
+# 📡 Sensor Integration
+
+The platform integrates advanced mobile sensors including:
+
+| Sensor | Purpose |
+|---|---|
+| Accelerometer | Motion analysis |
+| Gyroscope | Orientation analysis |
+| Microphone | Environmental sound analysis |
+| GPS | Scientific location tagging |
+| Battery Monitoring | Device diagnostics |
+
+---
+
+# 🪂 Activity 1 — Advanced Parachute Physics Laboratory
+
+## Overview
+
+A professional mobile physics simulation and experimentation environment for analysing:
+
+- free-fall motion
+- atmospheric drag
+- parachute efficiency
+- acceleration reduction
+- Newtonian mechanics
+
+The system compares:
+
+- ideal vacuum conditions
+- real atmospheric conditions
+- prototype parachute designs
+
+using experimentally recorded scientific data.
+
+---
+
+# 📘 Physics Equations
+
+## Perfect Vacuum Fall Time
+
+The ideal free-fall time is calculated using:
 
 $$
 t = \sqrt{\frac{2h}{g}}
@@ -65,15 +146,13 @@ $$
 
 Where:
 
-- \( t \) = fall time (seconds)
+- \( t \) = time (seconds)
 - \( h \) = height (meters)
 - \( g \) = gravitational acceleration
 
 ---
 
-## 📘 Standard Gravity
-
-The application uses internationally accepted Earth gravity:
+## Standard Gravity
 
 $$
 g = 9.80665 \ \text{m/s}^2
@@ -81,25 +160,15 @@ $$
 
 ---
 
-## 📘 Acceleration
-
-Acceleration is derived from:
+## Acceleration
 
 $$
 a = \frac{2h}{t^2}
 $$
 
-Where:
-
-- \( a \) = acceleration
-- \( h \) = height
-- \( t \) = time
-
 ---
 
-## 📘 Velocity
-
-Velocity is calculated using:
+## Velocity
 
 $$
 v = at
@@ -107,9 +176,7 @@ $$
 
 ---
 
-## 📘 Newton's Second Law
-
-Net force acting on the object:
+## Newton's Second Law
 
 $$
 F = ma
@@ -117,25 +184,15 @@ $$
 
 ---
 
-## 📘 Drag Force
-
-Atmospheric drag force is estimated using:
+## Drag Force
 
 $$
 F_d = mg - ma
 $$
 
-Where:
-
-- \( F_d \) = drag force
-- \( mg \) = gravitational force
-- \( ma \) = net force
-
 ---
 
-## 📘 Momentum
-
-Momentum is calculated using:
+## Momentum
 
 $$
 p = mv
@@ -143,9 +200,7 @@ $$
 
 ---
 
-## 📘 Kinetic Energy
-
-Kinetic energy is calculated using:
+## Kinetic Energy
 
 $$
 KE = \frac{1}{2}mv^2
@@ -153,9 +208,7 @@ $$
 
 ---
 
-## 📘 Relative G-Force
-
-Relative gravitational force is calculated using:
+## Relative G-Force
 
 $$
 G = \frac{a}{g}
@@ -163,233 +216,94 @@ $$
 
 ---
 
-## 📘 Experimental Vacuum Difference
+# 📈 Physics Features
 
-The system automatically compares real-world fall time against theoretical vacuum timing:
-
-$$
-\Delta t = t_{experimental} - t_{vacuum}
-$$
-
-This enables direct scientific analysis of:
-- parachute drag
-- aerodynamic resistance
-- acceleration reduction
-- energy loss
-- force changes
+- Real-world atmospheric drag comparison
+- Perfect vacuum simulation
+- Scientific SI-unit calculations
+- Experimental graphing
+- Multi-prototype comparison
+- Experimental history tracking
+- Engineering analysis dashboard
 
 ---
 
-# 🌍 Scientific Accuracy
+# 🔊 Activity 2 — Sound Pollution Hunter
 
-The application uses full scientific precision for all calculations.
+## Overview
 
-Example perfect vacuum fall for a 1-meter drop:
+A real-time environmental science laboratory that analyses classroom and environmental sound pollution using mobile sensor technology.
 
-$$
-t = \sqrt{\frac{2(1)}{9.80665}}
-$$
+The activity enables students to:
 
-$$
-t = 0.4515236409 \ \text{seconds}
-$$
-
-This allows highly accurate comparison between:
-- ideal vacuum conditions
-- atmospheric drag
-- parachute performance
-- aerodynamic efficiency
+- investigate environmental noise
+- compare sound intensity
+- analyse classroom acoustics
+- perform scientific environmental monitoring
+- visualise noise trends
 
 ---
 
-# 📊 Experimental Graphing
+# 🌍 Environmental Science Features
 
-The application dynamically visualizes:
-- experimental fall time
-- drag influence
-- parachute performance trends
-- trial progression
-
-Graph features include:
-- readable Y-axis scaling
-- second-based scientific formatting
-- chronological left-to-right progression
-- professional scientific visualization
+- Real-time sound analysis
+- Dynamic decibel visualization
+- Environmental monitoring dashboard
+- GPS-tagged experiment records
+- Scientific graph generation
+- Experimental history analytics
+- Noise-level classification system
 
 ---
 
-# 👤 Multi-User Architecture
+# 📊 Sound Pollution Categories
 
-Each authenticated user has:
-- independent experiment storage
-- isolated SQLite records
-- secure Firebase authentication state
-
-This ensures:
-- personalized datasets
-- no data overlap
-- scalable architecture
-
----
-
-# 🧠 Technologies Used
-
-| Technology | Purpose |
+| Range | Classification |
 |---|---|
-| React Native | Mobile application framework |
-| Expo | Mobile development environment |
-| Firebase Authentication | Secure authentication |
-| SQLite | Relational database |
-| TypeScript | Type-safe development |
-| React Native Chart Kit | Scientific graphing |
+| 0–40 dB | Quiet |
+| 40–70 dB | Normal |
+| 70–90 dB | Loud |
+| 90+ dB | Dangerous |
 
 ---
 
-# 🏗 Database Structure
+# 🎨 Professional STEMM UI/UX
 
-The SQLite database stores:
+The interface was designed using modern scientific dashboard principles including:
 
-| Field | Description |
-|---|---|
-| uid | Firebase user ID |
-| prototype | Prototype category |
-| time | Experimental fall time |
-| height | Drop height |
-| mass | Object mass |
-| idealTime | Perfect vacuum time |
-| acceleration | Measured acceleration |
-| velocity | Final velocity |
-| dragForce | Calculated drag |
-| kineticEnergy | Energy calculation |
-| momentum | Momentum calculation |
-| gForce | Relative g-force |
-| createdAt | Timestamp |
+- modular activity architecture
+- responsive mobile layouts
+- scientific color systems
+- engineering-inspired interfaces
+- real-time visualization
+- high-contrast data presentation
 
 ---
 
-# 📂 Project Structure
+# 🏗 Modular Activity Architecture
+
+The application uses scalable modular STEMM architecture.
+
+## Project Structure
 
 ```txt
 project/
 │
 ├── firebase.js
-├── app/
-│   └── index.tsx
-│
 ├── package.json
 ├── README.md
+│
+├── app/
+│   └── (tabs)/
+│
+│       ├── index.tsx
+│       │
+│       └── activities/
+│
+│           ├── parachute/
+│           │   └── index.tsx
+│           │
+│           └── sound/
+│               └── index.tsx
+│
 └── assets/
-```
-
----
-
-# ⚙ Installation
-
-## 1. Install Dependencies
-
-```bash
-npm install
-```
-
----
-
-## 2. Install SQLite
-
-```bash
-npm install expo-sqlite
-```
-
----
-
-## 3. Start Development Server
-
-```bash
-npx expo start --clear
-```
-
----
-
-# 🔥 Firebase Setup
-
-Create a Firebase project and enable:
-
-- Authentication
-- Email/Password Sign-In
-
-Then configure:
-
-```js
-firebase.js
-```
-
-with your Firebase credentials.
-
----
-
-# 🧪 Example Scientific Output
-
-## Perfect Vacuum Example
-
-| Metric | Value |
-|---|---|
-| Experimental Time | 0.4515236409s |
-| Vacuum Time | 0.4515236409s |
-| Velocity | 4.429446918m/s |
-| Acceleration | 9.806650000m/s² |
-| Drag Force | 0.000000000N |
-
----
-
-## Parachute Example
-
-| Metric | Value |
-|---|---|
-| Experimental Time | 4.000000000s |
-| Velocity | 0.500000000m/s |
-| Drag Force | 1.937000000N |
-| Acceleration Loss | 9.681650000m/s² |
-
----
-
-# 🎯 Educational Purpose
-
-This project demonstrates:
-- mobile software engineering
-- relational database systems
-- scientific computing
-- authentication systems
-- experimental data analysis
-- data visualization
-- physics simulation
-- engineering analysis
-
----
-
-# 🧑‍💻 Author
-
-Developed as a professional engineering and scientific experimentation platform using modern mobile development technologies.
-
----
-
-# 📜 License
-
-This project is intended for:
-- educational use
-- scientific experimentation
-- engineering demonstrations
-- academic assessment
-
----
-
-# 🏆 Final Notes
-
-The Advanced Parachute Physics Laboratory was designed to emulate professional engineering software while maintaining scientific correctness and modern mobile application architecture.
-
-The system demonstrates:
-- accurate physics computation
-- scientific precision
-- relational database implementation
-- secure authentication
-- persistent data management
-- experimental visualization
-- scalable software engineering principles
