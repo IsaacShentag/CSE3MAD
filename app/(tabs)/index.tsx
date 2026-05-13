@@ -19,6 +19,9 @@ import SoundScreen
 import ReactionScreen
   from "./activities/reaction";
 
+import BreathingScreen
+  from "./activities/breathing";
+
 export default function Index() {
 
   const [activity,
@@ -29,7 +32,9 @@ export default function Index() {
 
     <View style={{ flex: 1 }}>
 
-      {/* TOP NAVIGATION */}
+      {/* =====================================================
+          STEMM LAB NAVIGATION
+      ===================================================== */}
 
       <ScrollView
         horizontal
@@ -55,7 +60,7 @@ export default function Index() {
         >
 
           <Text style={styles.text}>
-            🪂 Parachute
+            🪂 Physics
           </Text>
 
         </TouchableOpacity>
@@ -78,7 +83,7 @@ export default function Index() {
         >
 
           <Text style={styles.text}>
-            🔊 Sound
+            🔊 Environment
           </Text>
 
         </TouchableOpacity>
@@ -101,14 +106,39 @@ export default function Index() {
         >
 
           <Text style={styles.text}>
-            ⚡ Reaction
+            ⚡ Neuroscience
+          </Text>
+
+        </TouchableOpacity>
+
+        {/* BREATHING */}
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+
+            activity ===
+              "breathing" &&
+              styles.activeButton,
+          ]}
+          onPress={() =>
+            setActivity(
+              "breathing"
+            )
+          }
+        >
+
+          <Text style={styles.text}>
+            🌬 Wellness
           </Text>
 
         </TouchableOpacity>
 
       </ScrollView>
 
-      {/* ACTIVE SCREEN */}
+      {/* =====================================================
+          ACTIVE STEMM MODULE
+      ===================================================== */}
 
       {activity ===
         "parachute" && (
@@ -125,6 +155,11 @@ export default function Index() {
         <ReactionScreen />
       )}
 
+      {activity ===
+        "breathing" && (
+        <BreathingScreen />
+      )}
+
     </View>
   );
 }
@@ -136,20 +171,27 @@ const styles =
       flexGrow: 0,
       flexDirection: "row",
       backgroundColor:
-        "#111827",
-      paddingTop: 50,
-      paddingBottom: 12,
-      paddingHorizontal: 10,
+        "#0f172a",
+      paddingTop: 52,
+      paddingBottom: 14,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+      borderBottomColor:
+        "#1e293b",
     },
 
     button: {
       backgroundColor:
-        "#374151",
-      paddingVertical: 14,
-      paddingHorizontal: 18,
-      borderRadius: 14,
-      marginRight: 10,
-      minWidth: 120,
+        "#1e293b",
+      paddingVertical: 15,
+      paddingHorizontal: 20,
+      borderRadius: 16,
+      marginRight: 12,
+      minWidth: 145,
+      shadowColor: "#000",
+      shadowOpacity: 0.15,
+      shadowRadius: 6,
+      elevation: 4,
     },
 
     activeButton: {
