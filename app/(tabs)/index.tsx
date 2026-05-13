@@ -22,6 +22,9 @@ import ReactionScreen
 import BreathingScreen
   from "./activities/breathing";
 
+import EarthquakeScreen
+  from "./activities/earthquake";
+
 export default function Index() {
 
   const [activity,
@@ -42,7 +45,7 @@ export default function Index() {
         style={styles.topBar}
       >
 
-        {/* PARACHUTE */}
+        {/* PHYSICS */}
 
         <TouchableOpacity
           style={[
@@ -65,7 +68,7 @@ export default function Index() {
 
         </TouchableOpacity>
 
-        {/* SOUND */}
+        {/* ENVIRONMENT */}
 
         <TouchableOpacity
           style={[
@@ -88,7 +91,7 @@ export default function Index() {
 
         </TouchableOpacity>
 
-        {/* REACTION */}
+        {/* NEUROSCIENCE */}
 
         <TouchableOpacity
           style={[
@@ -111,7 +114,7 @@ export default function Index() {
 
         </TouchableOpacity>
 
-        {/* BREATHING */}
+        {/* WELLNESS */}
 
         <TouchableOpacity
           style={[
@@ -130,6 +133,29 @@ export default function Index() {
 
           <Text style={styles.text}>
             🌬 Wellness
+          </Text>
+
+        </TouchableOpacity>
+
+        {/* ENGINEERING */}
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+
+            activity ===
+              "earthquake" &&
+              styles.activeButton,
+          ]}
+          onPress={() =>
+            setActivity(
+              "earthquake"
+            )
+          }
+        >
+
+          <Text style={styles.text}>
+            🌍 Engineering
           </Text>
 
         </TouchableOpacity>
@@ -160,6 +186,11 @@ export default function Index() {
         <BreathingScreen />
       )}
 
+      {activity ===
+        "earthquake" && (
+        <EarthquakeScreen />
+      )}
+
     </View>
   );
 }
@@ -171,9 +202,9 @@ const styles =
       flexGrow: 0,
       flexDirection: "row",
       backgroundColor:
-        "#0f172a",
-      paddingTop: 52,
-      paddingBottom: 14,
+        "#020617",
+      paddingTop: 54,
+      paddingBottom: 16,
       paddingHorizontal: 12,
       borderBottomWidth: 1,
       borderBottomColor:
@@ -184,14 +215,14 @@ const styles =
       backgroundColor:
         "#1e293b",
       paddingVertical: 15,
-      paddingHorizontal: 20,
-      borderRadius: 16,
+      paddingHorizontal: 22,
+      borderRadius: 18,
       marginRight: 12,
-      minWidth: 145,
+      minWidth: 155,
       shadowColor: "#000",
-      shadowOpacity: 0.15,
-      shadowRadius: 6,
-      elevation: 4,
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 5,
     },
 
     activeButton: {
@@ -204,5 +235,6 @@ const styles =
       textAlign: "center",
       fontWeight: "bold",
       fontSize: 15,
+      letterSpacing: 0.3,
     },
   });
