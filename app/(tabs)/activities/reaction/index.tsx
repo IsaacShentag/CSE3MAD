@@ -1,3 +1,7 @@
+import {
+  saveExperiment
+} from "../../../../services/firestore";
+
 import React, {
   useState,
 } from "react";
@@ -9,6 +13,7 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 
 import {
@@ -76,10 +81,10 @@ export default function ReactionScreen() {
   };
 
   // =====================================================
-  // TAP
+  // HANDLE TAP
   // =====================================================
 
-  const handleTap = () => {
+  const handleTap = async () => {
 
     // TOO EARLY
 
@@ -106,6 +111,30 @@ export default function ReactionScreen() {
         Date.now() -
         startTime;
 
+      // =================================================
+      // FIRESTORE CLOUD SAVE
+      // =================================================
+
+      await saveExperiment(
+        "reaction",
+        result
+      );
+
+      console.log(
+        "Reaction experiment uploaded to Firestore"
+      );
+
+      // OPTIONAL WOW ALERT
+
+      Alert.alert(
+        "Cloud Upload Complete",
+        "Scientific experiment uploaded to Firebase Firestore."
+      );
+
+      // =================================================
+      // LOCAL ANALYTICS
+      // =================================================
+
       const updatedScores = [
         ...scores,
         result,
@@ -114,6 +143,8 @@ export default function ReactionScreen() {
       setScores(
         updatedScores
       );
+
+      // BEST SCORE
 
       if (
         bestScore === null ||
