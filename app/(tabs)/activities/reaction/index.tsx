@@ -2,6 +2,10 @@ import {
   saveExperiment
 } from "../../../../services/firestore";
 
+import {
+  uploadExperimentImage
+} from "../../../../services/storage";
+
 import React, {
   useState,
 } from "react";
@@ -111,29 +115,23 @@ export default function ReactionScreen() {
         Date.now() -
         startTime;
 
-      // =================================================
-      // FIRESTORE CLOUD SAVE
-      // =================================================
+      // ===============================================
+      // SAVE TO FIRESTORE
+      // ===============================================
 
       await saveExperiment(
         "reaction",
         result
       );
 
-      console.log(
-        "Reaction experiment uploaded to Firestore"
-      );
-
-      // OPTIONAL WOW ALERT
-
       Alert.alert(
         "Cloud Upload Complete",
-        "Scientific experiment uploaded to Firebase Firestore."
+        "Reaction experiment saved to Firebase Firestore."
       );
 
-      // =================================================
+      // ===============================================
       // LOCAL ANALYTICS
-      // =================================================
+      // ===============================================
 
       const updatedScores = [
         ...scores,
@@ -143,8 +141,6 @@ export default function ReactionScreen() {
       setScores(
         updatedScores
       );
-
-      // BEST SCORE
 
       if (
         bestScore === null ||
@@ -193,8 +189,7 @@ export default function ReactionScreen() {
         </Text>
 
         <Text style={styles.heroSubtitle}>
-          Human Performance
-          Laboratory
+          Human Performance Laboratory
         </Text>
 
       </View>
@@ -228,7 +223,7 @@ export default function ReactionScreen() {
 
       </TouchableOpacity>
 
-      {/* START */}
+      {/* START BUTTON */}
 
       <TouchableOpacity
         style={styles.startBtn}
@@ -241,12 +236,31 @@ export default function ReactionScreen() {
 
       </TouchableOpacity>
 
-      {/* STATS */}
+      {/* STORAGE BUTTON */}
+
+      <TouchableOpacity
+        style={styles.uploadBtn}
+        onPress={
+          uploadExperimentImage
+        }
+      >
+
+        <Text style={styles.btnText}>
+          📸 Upload Evidence
+        </Text>
+
+      </TouchableOpacity>
+
+      {/* ANALYTICS */}
 
       <View style={styles.card}>
 
         <Text style={styles.title}>
           🧠 Neuroscience Analytics
+        </Text>
+
+        <Text style={styles.cloudText}>
+          ☁ Cloud Synced
         </Text>
 
         <View style={styles.row}>
@@ -407,6 +421,14 @@ const styles =
         "#2563eb",
       padding: 20,
       borderRadius: 18,
+      marginBottom: 14,
+    },
+
+    uploadBtn: {
+      backgroundColor:
+        "#7c3aed",
+      padding: 20,
+      borderRadius: 18,
       marginBottom: 20,
     },
 
@@ -428,7 +450,14 @@ const styles =
     title: {
       fontSize: 22,
       fontWeight: "bold",
-      marginBottom: 16,
+      marginBottom: 12,
+    },
+
+    cloudText: {
+      color: "#2563eb",
+      fontWeight: "bold",
+      marginBottom: 18,
+      fontSize: 16,
     },
 
     row: {
